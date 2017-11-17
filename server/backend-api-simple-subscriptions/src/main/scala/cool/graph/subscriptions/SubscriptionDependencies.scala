@@ -3,8 +3,7 @@ package cool.graph.subscriptions
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
-import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.CloudwatchImpl
+import cool.graph.aws.cloudwatch.CloudwatchMock
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.FeatureMetricActor
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
@@ -14,7 +13,7 @@ import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
 import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, QueueConsumer}
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
+import cool.graph.shared.externalServices._
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -83,10 +82,9 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   lazy val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
   lazy val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
   lazy val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
-  lazy val cloudwatch                 = CloudwatchImpl()
+  lazy val cloudwatch                 = CloudwatchMock
   lazy val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
-  lazy val kinesis                    = AwsInitializers.createKinesis()
-  lazy val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  lazy val kinesisApiMetricsPublisher = DummyKinesisPublisher()
   lazy val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
@@ -101,7 +99,6 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
 
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "project-schema-fetcher" toNonLazy ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
-  binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "featureMetricActor" to featureMetricActor
   binding identifiedBy "api-metrics-middleware" toNonLazy apiMetricsMiddleware
 }
