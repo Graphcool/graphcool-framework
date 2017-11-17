@@ -2,10 +2,8 @@ package cool.graph.system
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.ConfigFactory
-import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
+import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchMock}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.{Conversions, PubSubPublisher}
@@ -48,7 +46,7 @@ trait SystemApiDependencies extends Module {
 
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "logs-db" toNonLazy logsDb
-  binding identifiedBy "export-data-s3" toNonLazy AwsInitializers.createExportDataS3()
+  //binding identifiedBy "export-data-s3" toNonLazy AwsInitializers.createExportDataS3()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
@@ -68,6 +66,7 @@ trait SystemApiDependencies extends Module {
 
 case class SystemDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemApiDependencies {
   import system.dispatcher
+
   import scala.concurrent.duration._
 
   SystemMetrics.init()
@@ -97,10 +96,11 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
   lazy val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
   lazy val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch                                   = CloudwatchImpl()
-  lazy val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
-  lazy val kinesis                                      = AwsInitializers.createKinesis()
-  lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val cloudwatch                                   = CloudwatchMock
+
+  lazy val snsPublisher                       = DummySnsPublisher()
+  lazy val kinesisAlgoliaSyncQueriesPublisher = DummyKinesisPublisher()
+  lazy val kinesisApiMetricsPublisher         = DummyKinesisPublisher()
 
   lazy val functionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
@@ -112,11 +112,10 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   bind[FunctionEnvironment] toNonLazy functionEnvironment
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
-  bind[AmazonSNS] identifiedBy "sns" toNonLazy AwsInitializers.createSns()
   bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
   bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
+  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
 
-  binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
