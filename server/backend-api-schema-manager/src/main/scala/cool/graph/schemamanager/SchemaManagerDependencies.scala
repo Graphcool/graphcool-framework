@@ -3,7 +3,7 @@ package cool.graph.schemamanager
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
-import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
+import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl, CloudwatchMock}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.system.database.finder._
 import cool.graph.system.metrics.SystemMetrics
@@ -42,7 +42,7 @@ case class SchemaManagerDependencies()(implicit val system: ActorSystem, val mat
   lazy val uncachedProjectResolver                      = UncachedProjectResolver(internalDb)
   lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)
   lazy val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch                                   = CloudwatchImpl()
+  lazy val cloudwatch                                   = CloudwatchMock
 
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
 
