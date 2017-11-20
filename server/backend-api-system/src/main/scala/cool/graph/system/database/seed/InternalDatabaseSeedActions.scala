@@ -42,12 +42,18 @@ object InternalDatabaseSeedActions {
     * @return SQL action required to create the ProjectDatabase.
     */
   private def createProjectDatabaseSeedAction(): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
+    def insertProjectDbForRegion(region: String) = {
+      val id = s"$region-client-1"
       sqlu"""
         INSERT INTO ProjectDatabase (id, region, name, isDefaultForRegion)
-        SELECT 'eu-west-1-client-1', 'eu-west-1', 'client1', 1 FROM DUAL
-        WHERE NOT EXISTS (SELECT * FROM ProjectDatabase);
+        SELECT $id, $region, 'client1', 1 FROM DUAL
+        WHERE NOT EXISTS (SELECT * FROM ProjectDatabase WHERE region = $region);
       """
+    }
+    DBIO.seq(
+      insertProjectDbForRegion("eu-west-1"),
+      insertProjectDbForRegion("us-west-2"),
+      insertProjectDbForRegion("ap-northeast-1")
     )
   }
 }
