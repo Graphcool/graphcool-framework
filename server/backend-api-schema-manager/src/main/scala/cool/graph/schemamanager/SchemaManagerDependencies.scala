@@ -3,8 +3,10 @@ package cool.graph.schemamanager
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
-import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl, CloudwatchMock}
+import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchMock}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
+import cool.graph.messagebus.{Conversions, PubSubSubscriber}
+import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.system.database.finder._
 import cool.graph.system.metrics.SystemMetrics
 import scaldi.Module
@@ -22,6 +24,7 @@ trait SchemaManagerApiDependencies extends Module {
   val cachedProjectResolver: CachedProjectResolver
   val requestPrefix: String
   val cloudwatch: Cloudwatch
+  val schemaInvalidationSubscriber: PubSubSubscriber[String]
 
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
@@ -43,11 +46,23 @@ case class SchemaManagerDependencies()(implicit val system: ActorSystem, val mat
   lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)
   lazy val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val cloudwatch                                   = CloudwatchMock
+  lazy val globalRabbitUri                              = sys.env("GLOBAL_RABBIT_URI")
+
+  implicit val bugsnagger   = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  implicit val unmarshaller = Conversions.Unmarshallers.ToString
+
+  lazy val schemaInvalidationSubscriber: PubSubSubscriber[String] = RabbitAkkaPubSub.subscriber[String](
+    globalRabbitUri,
+    "project-schema-invalidation",
+    durable = true
+  )
 
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
+  bind[PubSubSubscriber[String]] identifiedBy "schema-manager-invalidation-subscriber" toNonLazy schemaInvalidationSubscriber
 
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver
+
 }

@@ -57,9 +57,9 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   import cool.graph.subscriptions.protocol.Converters._
 
   implicit val unmarshaller                   = (_: Array[Byte]) => SchemaInvalidated
-  lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
   lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
   lazy val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
+  lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
 
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
     globalRabbitUri,

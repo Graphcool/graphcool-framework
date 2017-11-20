@@ -73,6 +73,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   lazy val pubSub: InMemoryAkkaPubSub[String]                                 = InMemoryAkkaPubSub[String]()
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]      = pubSub
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
+  lazy val schemaInvalidationSubscriber: PubSubSubscriber[String]             = pubSub
   lazy val invalidationPublisher: PubSubPublisher[String]                     = pubSub
   lazy val functionEnvironment                                                = DevFunctionEnvironment()
   lazy val blockedProjectIds: Vector[String]                                  = Vector.empty
@@ -140,6 +141,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy invalidationPublisher
   bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy logsPublisher
   bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
+  bind[PubSubSubscriber[String]] identifiedBy "schema-manager-invalidation-subscriber" toNonLazy schemaInvalidationSubscriber
   bind[FunctionEnvironment] toNonLazy functionEnvironment
   bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy endpointResolver
   bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy webhooksPublisher
