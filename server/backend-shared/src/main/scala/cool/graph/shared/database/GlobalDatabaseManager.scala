@@ -30,8 +30,7 @@ case class GlobalDatabaseManager(currentRegion: Region, databases: Map[ProjectDa
   def getDbForProjectDatabase(projectDatabase: ProjectDatabase): Databases = {
     val projectDbRef = ProjectDatabaseRef(projectDatabase.region, projectDatabase.name)
     databases.get(projectDbRef) match {
-      case None =>
-        sys.error(s"This service is not configured to access Client Db with name [${projectDbRef.name}] in region '${projectDbRef.region}'")
+      case None     => sys.error(s"This service is not configured to access Client Db with name [${projectDbRef.name}] in region '${projectDbRef.region}'")
       case Some(db) => db
     }
   }
@@ -44,9 +43,10 @@ object GlobalDatabaseManager {
 
   def initializeForSingleRegion(config: Config): GlobalDatabaseManager = {
     import scala.collection.JavaConversions._
-    config.resolve()
-    val currentRegion = Region.withName(config.getString(awsRegionConfigProp))
 
+    config.resolve()
+
+    val currentRegion = Region.withName(config.getString(awsRegionConfigProp))
     val databasesMap = for {
       (dbName, _) <- config.getObject(singleConfigRoot)
     } yield {

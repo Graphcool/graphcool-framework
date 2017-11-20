@@ -14,7 +14,7 @@ import cool.graph.messagebus.queue.rabbit.RabbitQueue
 import cool.graph.messagebus.{Conversions, PubSubPublisher, QueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{DummyKinesisPublisher, KinesisPublisher}
-import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
+import cool.graph.shared.functions.lambda.{LambdaFunctionEnvironment, SingleRegionBucketResolver}
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
 import cool.graph.webhook.Webhook
 
@@ -48,9 +48,14 @@ case class SimpleApiDependencies(implicit val system: ActorSystem, val materiali
     RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
   }
 
+  lazy val lambdaAccessKeyId = sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever")
+  lazy val lambdaAccessKey   = sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  lazy val awsRegion         = sys.env.getOrElse("AWS_REGION", "whatever")
+
   lazy val functionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+    lambdaAccessKeyId,
+    lambdaAccessKey,
+    SingleRegionBucketResolver(lambdaAccessKeyId, lambdaAccessKey, awsRegion)
   )
 
   lazy val blockedProjectIds: Vector[String] = Try {

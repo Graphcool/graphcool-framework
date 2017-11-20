@@ -10,7 +10,7 @@ import cool.graph.messagebus.{Conversions, PubSubPublisher}
 import cool.graph.shared.database.{GlobalDatabaseManager, InternalDatabase}
 import cool.graph.shared.externalServices._
 import cool.graph.shared.functions.FunctionEnvironment
-import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
+import cool.graph.shared.functions.lambda.{LambdaFunctionEnvironment, SingleRegionBucketResolver}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.system.database.Initializers
 import cool.graph.system.database.finder.client.ClientResolver
@@ -102,9 +102,14 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   lazy val kinesisAlgoliaSyncQueriesPublisher = DummyKinesisPublisher()
   lazy val kinesisApiMetricsPublisher         = DummyKinesisPublisher()
 
+  lazy val lambdaAccessKeyId = sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever")
+  lazy val lambdaAccessKey   = sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  lazy val awsRegion         = sys.env.getOrElse("AWS_REGION", "whatever")
+
   lazy val functionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+    lambdaAccessKeyId,
+    lambdaAccessKey,
+    SingleRegionBucketResolver(lambdaAccessKeyId, lambdaAccessKey, awsRegion)
   )
 
   bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy invalidationPublisher
