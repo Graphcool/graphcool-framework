@@ -39,7 +39,7 @@ case class AddProjectMutation(
 
   val projectDatabaseFuture: Future[Option[ProjectDatabase]] = args.projectDatabaseId match {
     case Some(id) => ProjectDatabaseFinder.forId(id)(internalDatabase.databaseDef)
-    case None     => ProjectDatabaseFinder.defaultForRegion(args.region)(internalDatabase.databaseDef)
+    case None     => ProjectDatabaseFinder.defaultForRegion(Region.withName(sys.env("AWS_REGION")))(internalDatabase.databaseDef)
   }
 
   val projectDatabase: ProjectDatabase = Await.result(projectDatabaseFuture, 5.seconds) match {

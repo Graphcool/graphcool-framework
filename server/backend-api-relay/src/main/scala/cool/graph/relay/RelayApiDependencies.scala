@@ -16,7 +16,7 @@ import cool.graph.relay.schema.RelaySchemaBuilder
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{DummyKinesisPublisher, KinesisPublisher}
 import cool.graph.shared.functions.lambda.{LambdaFunctionEnvironment, SingleRegionBucketResolver}
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver, PrivateClusterEndpointResolver}
 import cool.graph.webhook.Webhook
 
 import scala.util.Try
@@ -71,7 +71,7 @@ case class RelayApiDependencies(implicit val system: ActorSystem, val materializ
   lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
   lazy val globalDatabaseManager              = GlobalDatabaseManager.initializeForSingleRegion(config)
   lazy val fromStringMarshaller               = Conversions.Marshallers.FromString
-  lazy val endpointResolver                   = LiveEndpointResolver()
+  lazy val endpointResolver                   = PrivateClusterEndpointResolver()
   lazy val logsPublisher                      = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugSnagger, fromStringMarshaller)
   lazy val webhooksPublisher                  = RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugSnagger, Webhook.marshaller)
   lazy val sssEventsPublisher                 = RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugSnagger, fromStringMarshaller)

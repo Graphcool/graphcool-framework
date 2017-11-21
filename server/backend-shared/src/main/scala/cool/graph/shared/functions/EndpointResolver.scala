@@ -48,13 +48,27 @@ case class LiveEndpointResolver() extends EndpointResolver {
   }
 }
 
+case class PrivateClusterEndpointResolver() extends EndpointResolver {
+  val awsRegion = sys.env.getOrElse("AWS_REGION", sys.error("AWS_REGION env var required but not found."))
+  val subdomain = sys.env.getOrElse("CLUSTER_SUBDOMAIN", sys.error("CLUSTER_SUBDOMAIN env var required but not found."))
+
+  override def endpoints(projectId: String) = {
+    GraphcoolEndpoints(
+      simple = s"https://$subdomain.graph.cool/simple/v1/$projectId",
+      relay = s"https://$subdomain.graph.cool/relay/v1/$projectId",
+      system = s"https://$subdomain.graph.cool/system",
+      subscriptions = s"wss://$subdomain.graph.cool/v1/$projectId"
+    )
+  }
+}
+
 case class MockEndpointResolver() extends EndpointResolver {
   override def endpoints(projectId: String) = {
     GraphcoolEndpoints(
       simple = s"http://test.cool/simple/v1/$projectId",
       relay = s"http://test.cool/relay/v1/$projectId",
       system = s"http://test.cool/system",
-      subscriptions = s"http://test.cool/subscriptions/v1/$projectId"
+      subscriptions = s"wss://test.cool/subscriptions/v1/$projectId"
     )
   }
 }

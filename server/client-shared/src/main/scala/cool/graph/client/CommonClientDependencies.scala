@@ -59,11 +59,7 @@ trait CommonClientDependencies extends Module with LazyLogging {
   bind[GlobalApiEndpointManager] toNonLazy globalApiEndpointManager
   bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
   bind[BugSnagger] toNonLazy bugSnagger
-  bind[ClientAuth] toNonLazy clientAuth
-  bind[TestableTime] toNonLazy testableTime
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
-  bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
-  bind[BugSnagger] toNonLazy bugSnagger
 
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())

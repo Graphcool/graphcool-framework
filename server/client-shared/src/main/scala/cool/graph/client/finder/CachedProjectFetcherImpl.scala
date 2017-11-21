@@ -26,7 +26,6 @@ case class CachedProjectFetcherImpl(
   projectSchemaInvalidationSubscriber.subscribe(
     Everything,
     (msg: Message[String]) => {
-
       val projectWithClientId: Future[Option[ProjectWithClientId]] = cache.get(msg.payload)
 
       projectWithClientId.toFutureTry
@@ -70,6 +69,11 @@ case class CachedProjectFetcherImpl(
           aliasToIdMapping.put(alias, project.id)
         }
     }
+
+    result.onFailure {
+      case e: Throwable => println(e)
+    }
+
     result
   }
 }
