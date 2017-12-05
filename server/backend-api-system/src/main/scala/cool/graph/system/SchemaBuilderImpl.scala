@@ -72,7 +72,8 @@ class SchemaBuilderImpl(
     getAddProjectField,
     getAuthenticateCustomerField,
     getExportDataField,
-    getGenerateNodeTokenMutationField
+    getGenerateNodeTokenMutationField,
+    getDeleteProjectField
   )
 
   def getPushField: Field[SystemUserContext, Unit] = {
@@ -280,6 +281,33 @@ class SchemaBuilderImpl(
               case _ =>
                 throw SystemErrors.InvalidProjectId(projectId = input.projectId)
             }
+        }
+      )
+  }
+
+  def getDeleteProjectField: Field[SystemUserContext, Unit] = {
+    import DeleteProject.manual
+
+    Mutation
+      .fieldWithClientMutationId[SystemUserContext, Unit, DeleteProjectMutationPayload, DeleteProjectInput](
+        fieldName = "deleteProject",
+        typeName = "DeleteProject",
+        inputFields = DeleteProject.inputFields,
+        outputFields = fields(
+          Field("viewer", viewerType, resolve = _ => ViewerModel()),
+          Field("deletedId", StringType, resolve = ctx => ctx.value.project.id),
+          Field("user", clientType, resolve = ctx => ctx.value.client)
+        ),
+        mutateAndGetPayload = (input, ctx) =>
+          UpdateCtx({
+            val project = ProjectFinder.loadById(ctx.ctx.getClient.id, input.projectId)
+            project.flatMap { project =>
+              val mutator = DeleteProjectMutation(client = ctx.ctx.getClient, project = project, args = input, projectDbsFn = internalAndProjectDbsForProject)
+
+              mutator.run(ctx.ctx)
+            }
+          }) { payload =>
+            ctx.ctx.refresh()
         }
       )
   }
