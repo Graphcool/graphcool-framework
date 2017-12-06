@@ -32,7 +32,7 @@ object SingleServerMain extends App with Injectable {
     SchemaManagerServer("schema-manager"),
     ClientServer("simple"),
     ClientServer("relay"),
-    WebsocketServer(websocketServices, "subscriptions"),
+    WebsocketServer(websocketServices),
     SimpleSubscriptionsServer(),
     WorkerServer(workerServices)
   ).startBlocking()

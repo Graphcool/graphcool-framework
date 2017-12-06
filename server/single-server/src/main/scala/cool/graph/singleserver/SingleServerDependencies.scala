@@ -18,7 +18,8 @@ import cool.graph.schemamanager.SchemaManagerApiDependencies
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices._
 import cool.graph.shared.functions.dev.DevFunctionEnvironment
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LocalEndpointResolver}
+import cool.graph.shared.functions.lambda.{LambdaFunctionEnvironment, SingleRegionBucketResolver}
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LocalEndpointResolver, PrivateClusterEndpointResolver}
 import cool.graph.subscriptions.SimpleSubscriptionApiDependencies
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -51,7 +52,6 @@ trait SingleServerApiDependencies
 
 case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
   import system.dispatcher
-
   import scala.concurrent.duration._
 
   lazy val (globalDatabaseManager, internalDb, logsDb) = {
@@ -75,21 +75,28 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
   lazy val schemaInvalidationSubscriber: PubSubSubscriber[String]             = pubSub
   lazy val invalidationPublisher: PubSubPublisher[String]                     = pubSub
-  lazy val functionEnvironment                                                = DevFunctionEnvironment()
-  lazy val blockedProjectIds: Vector[String]                                  = Vector.empty
-  lazy val endpointResolver                                                   = LocalEndpointResolver()
-  lazy val uncachedProjectResolver                                            = UncachedProjectResolver(internalDb)
-  lazy val cachedProjectResolver: CachedProjectResolver                       = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
-  lazy val requestPrefix                                                      = "local"
-  lazy val sssEventsPubSub                                                    = InMemoryAkkaPubSub[String]()
-  lazy val sssEventsPublisher: PubSubPublisher[String]                        = sssEventsPubSub
-  lazy val sssEventsSubscriber: PubSubSubscriber[String]                      = sssEventsPubSub
-  lazy val cloudwatch                                                         = CloudwatchMock
-  lazy val snsPublisher                                                       = DummySnsPublisher()
-  lazy val kinesisAlgoliaSyncQueriesPublisher                                 = DummyKinesisPublisher()
-  lazy val kinesisApiMetricsPublisher                                         = DummyKinesisPublisher()
-  lazy val featureMetricActor                                                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-  lazy val apiMetricsMiddleware                                               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val lambdaAccessKeyId                                                  = sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever")
+  lazy val lambdaAccessKey                                                    = sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  lazy val awsRegion                                                          = sys.env.getOrElse("AWS_REGION", "whatever")
+  lazy val functionEnvironment = LambdaFunctionEnvironment(
+    lambdaAccessKeyId,
+    lambdaAccessKey,
+    SingleRegionBucketResolver(lambdaAccessKeyId, lambdaAccessKey, awsRegion)
+  )
+  lazy val blockedProjectIds: Vector[String]             = Vector.empty
+  lazy val endpointResolver                              = PrivateClusterEndpointResolver()
+  lazy val uncachedProjectResolver                       = UncachedProjectResolver(internalDb)
+  lazy val cachedProjectResolver: CachedProjectResolver  = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
+  lazy val requestPrefix                                 = awsRegion
+  lazy val sssEventsPubSub                               = InMemoryAkkaPubSub[String]()
+  lazy val sssEventsPublisher: PubSubPublisher[String]   = sssEventsPubSub
+  lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
+  lazy val cloudwatch                                    = CloudwatchMock
+  lazy val snsPublisher                                  = DummySnsPublisher()
+  lazy val kinesisAlgoliaSyncQueriesPublisher            = DummyKinesisPublisher()
+  lazy val kinesisApiMetricsPublisher                    = DummyKinesisPublisher()
+  lazy val featureMetricActor                            = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  lazy val apiMetricsMiddleware                          = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
   // API webhooks -> worker webhooks
   lazy val webhooksQueue: Queue[Webhook] = InMemoryAkkaQueue[Webhook]()

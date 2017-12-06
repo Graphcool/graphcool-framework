@@ -32,6 +32,7 @@ case class ServerExecutor(port: Int, servers: Server*)(implicit system: ActorSys
   def statusRoute: Route = (get & path("status")) {
     val checks = Future.sequence(servers.map(_.healthCheck))
 
+    checks.onFailure({ case e: Throwable => println(e) })
     onSuccess(checks) { _ =>
       complete("OK")
     }

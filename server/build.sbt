@@ -99,7 +99,7 @@ lazy val commonBackendSettings = commonSettings ++ Seq(
     "-J-Dcom.sun.management.jmxremote.port=3333",
     "-J-Dcom.sun.management.jmxremote.rmi.port=3333",
     "-J-Djava.rmi.server.hostname=localhost",
-    "-J-Xmx512m"
+    "-J-Xmx7000m"
   )
 )
 
