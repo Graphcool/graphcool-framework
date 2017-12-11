@@ -110,8 +110,8 @@ case class SchemaManagerServer(prefix: String = "")(
     }
   }
 
-  def healthCheck =
-    for {
-      internalDb <- internalDatabase.run(sql"SELECT 1".as[Int])
-    } yield internalDb
+  def healthCheck = Future.successful(())
+//    for {
+//      internalDb <- internalDatabase.run(sql"SELECT 1".as[Int])
+//    } yield internalDb
 }

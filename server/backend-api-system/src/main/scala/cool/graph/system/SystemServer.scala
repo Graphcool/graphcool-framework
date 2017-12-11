@@ -160,15 +160,15 @@ case class SystemServer(
       }
   }
 
-  def healthCheck: Future[_] =
-    for {
-      _ <- Future.sequence {
-            globalDatabaseManager.databases.values.map { db =>
-              for {
-                _ <- db.master.run(sql"SELECT 1".as[Int])
-                _ <- db.readOnly.run(sql"SELECT 1".as[Int])
-              } yield ()
-            }
-          }
-    } yield ()
+  def healthCheck: Future[_] = Future.successful(())
+//    for {
+//      _ <- Future.sequence {
+//            globalDatabaseManager.databases.values.map { db =>
+//              for {
+//                _ <- db.master.run(sql"SELECT 1".as[Int])
+//                _ <- db.readOnly.run(sql"SELECT 1".as[Int])
+//              } yield ()
+//            }
+//          }
+//    } yield ()
 }
