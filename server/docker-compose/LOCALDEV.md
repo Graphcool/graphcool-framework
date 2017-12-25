@@ -1,6 +1,6 @@
 # Development setup with docker & debugging in tandem with the CLI
 
-This guide is for those who wish to run and test their code while developing, providing you with a tight feedbsack loop and the possibility to use a debugger to step through code.
+This guide is for those who wish to run and test their code while developing, providing you with a tight feedback loop and the possibility to use a debugger to step through code.
 
 There are two main approaches to running your code:
   - Build images with your changes to test the "natural" flow with the CLI.
