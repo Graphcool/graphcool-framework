@@ -86,14 +86,14 @@ Then all you have to do is **to start intellij from the folder with the loaded e
 
 Then deploy a service with the CLI. You can select the name you gave the cluster in the mapping, e.g. `intellij`, and it will connect to your servers running in intellij.
 
-Important: The endpoints to access the Api playground for a service will be printed wrong by the CLI - you need to change it to the correct port of the Api server, 9000.
+Important: The endpoints to access the Api playground for a service will be printed incorrectly by the CLI - you need to change it to the correct port of the Api server, 9000.
 
 ### Accessing/Inspecting the DB
 Using the `.envrc` variables for the MySql container, you can configure your shiny GUI tool, or you can connect to the DB via CLI: `mysql -u root -h 127.0.0.1 --port=3306 --password=graphcool` (if you use the defaults from above).
 
 ## Troubleshooting Tips
 
-- General: `docker ps` and take a hard look, if you have too much stuff running kill everything when in doubt and start with only those contains that help. Also look at the ports in combination with the infos in the `~/.graphcool/config.yml` file.
+- General: `docker ps` and take a hard look, if you have too much stuff running kill everything when in doubt and start with only those containers that you need (for example only the mysql container for local dev). Additionally, look at the docker ports and compare them to the cached infos and the mapping in the `~/.graphcool/config.yml` file.
 - Reset the database! You might have stale data that has the wrong format, so wiping the mysql container completely usually helps (if you use the one wihout persistence, then killing it and removing it should do the trick). **Note that restarting the deploy server then sets up the correct database structure again.**
 - Check your env vars. A common issue is that the schema manager endpoint on the deploy server is wired incorrectly.
 - Make sure you start intellij from a shell session that has all the correct env vars!
