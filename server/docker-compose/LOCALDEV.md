@@ -6,7 +6,7 @@ There are two main approaches to running your code:
   - Build images with your changes to test the "natural" flow with the CLI.
   - Have the required servers running in Intellij.
 
-The first option is useful when you developed a new feature and want to conclude your testing with without much rewiring, just give the CLI a spin with fresh images that you build and test if everything works if the CLI takes care of the images, just as regular graphcool users would utilize the local setup.
+The first option is useful when you developed a new feature and want to conclude your testing without much rewiring, just give the CLI a spin with fresh images that you build and test that everything works if the CLI takes care of the images, just as regular graphcool users would utilize the local setup.
 
 The second option is the one with a tight feedback loop and debugging capabilities, and useful during your usual feature development process.
 
