@@ -16,7 +16,7 @@ To learn more about the SDL, you can check out the [official documentation](http
 This is an example for what a `types.graphql` could look like:
 
 ```graphql
-type Tweet @model {  
+type Tweet @model {
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -51,7 +51,7 @@ Each type that you want to be part of this data model needs to be defined with t
 
 There are three system fields, all of which are managed by the Graphcool runtime and read-only for you.
 
-#### Required system field: `id` 
+#### Required system field: `id`
 
 Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool-framework deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your service will get assigned a globally unique ID automatically.
 
@@ -81,7 +81,7 @@ type Article @model {
   createdAt: DateTime! # optional system field
   updatedAt: DateTime! # optional system field
 }
-``` 
+```
 
 <InfoBox type=warning>
 
@@ -95,7 +95,7 @@ A *model type* defines the structure for a certain type of your data. If you are
 
 An instantiation of a type is called a *node*. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your data graph.
 
-Every type you define will be available as a type in your GraphQL schema. 
+Every type you define will be available as a type in your GraphQL schema.
 
 
 ### Defining a model type
@@ -179,13 +179,13 @@ Note: Enum values can at most be 191 characters long.
 
 In queries or mutations, Enum fields have to be specified without any enclosing characters. You can only use values that you defined for the enum: `enum: COMPACT`, `enum: WIDE`.
 
-#### JSON
+#### Json
 
-Sometimes you need to store arbitrary JSON values for loosely structured data. The JSON type makes sure that it is actually valid JSON and returns the value as a parsed JSON object/array instead of a string.
+Sometimes you need to store arbitrary Json values for loosely structured data. The Json type makes sure that it is actually valid Json and returns the value as a parsed Json object/array instead of a string.
 
-Note: JSON values are currently limited to 256KB in size.
+Note: Json values are currently limited to 256KB in size.
 
-In queries or mutations, JSON fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
+In queries or mutations, Json fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 
 <!--
 #### GeoPoint
@@ -450,4 +450,3 @@ Every type has a [required](#required) system field with the name `id` of type [
 ### `createdAt` and `updatedAt` Fields
 
 Every type has the [DateTime](#datetime) fields `createdAt` and `updatedAt` that will be set automatically when a node is created or updated. You cannot change the values for these fields.
-
