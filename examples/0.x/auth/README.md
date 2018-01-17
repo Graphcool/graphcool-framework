@@ -27,10 +27,10 @@ This directory contains the service definition and file structure for a simple G
 
 ### 1. Download the example
 
-Clone the full [framework](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
+Clone the full [framework](https://github.com/graphcool/graphcool-framework) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/0.x/auth
+curl https://codeload.github.com/graphcool/graphcool-framework/tar.gz/master | tar -xz --strip=2 graphcool-master-framework/examples/0.x/auth
 cd auth
 ```
 
@@ -141,4 +141,4 @@ We further define three [resolver](https://graph.cool/docs/reference/functions/r
 - [`authenticate`](./graphcool.yml#L12): Allows already existing users to log in, i.e. requesting a new [temporary authentication token](https://graph.cool/docs/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens). Uses the `authenticateUser` mutation defined in [`authenticate.graphql`](./authenticate.graphql)  and is implemented in [`./src/authenticate.js`](./src/authenticate.js).
 - [`loggedInUser`](./graphcool.yml#L19): Allows to check whether a user is currently logged in by sending a request with an attached authentication token. If the token is valid for a particular user, the user's `id` will be returned. It uses the `loggedInUser` query defined in [`./src/loggedInUser.graphql`](./src/loggedInUser.graphql) and is implemented in [`./src/loggedInUser.js`](./src/loggedInUser.js).
 
-The `signup` and `authenticate` resolvers each use [graphcool-lib](https://github.com/graphcool/graphcool-lib) to [generate an authentication token](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L37) for an existing `User` node.
+The `signup` and `authenticate` resolvers each use [graphcool-lib](https://github.com/graphcool/graphcool-framework-lib) to [generate an authentication token](https://github.com/graphcool/graphcool-framework-lib/blob/master/src/index.ts#L37) for an existing `User` node.

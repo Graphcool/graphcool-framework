@@ -1,15 +1,15 @@
 # Sending queries and mutations with `graphcool-lib`
 
-This example demonstrates how to **send queries and mutations against your service's API using [`graphcool-lib`](https://github.com/graphcool/graphcool-lib)** from inside a Graphcool [function](https://graph.cool/docs/reference/functions/overview-aiw4aimie9).
+This example demonstrates how to **send queries and mutations against your service's API using [`graphcool-lib`](https://github.com/graphcool/graphcool-framework-lib)** from inside a Graphcool [function](https://graph.cool/docs/reference/functions/overview-aiw4aimie9).
 
 ## Get started
 
 ### 1. Download the example
 
-Clone the full [framework](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
+Clone the full [framework](https://github.com/graphcool/graphcool-framework) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/0.x/graphcool-lib
+curl https://codeload.github.com/graphcool/graphcool-framework/tar.gz/master | tar -xz --strip=2 graphcool-master-framework/examples/0.x/graphcool-lib
 cd graphcool-lib
 ```
 
