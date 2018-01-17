@@ -9,15 +9,6 @@ The Graphcool CLI is the primary tool to manage your Graphcool services. General
 
 The CLI offers tools to modify the local version of your service definition and file structure as well as syncing these changes with already deployed services.
 
-<InfoBox typ=warning>
-
-Note that there are **2 major versions of the Graphcool CLI**:
-
-- [`graphcool-framework`](https://www.npmjs.com/package/graphcool-framework): The CLI to be used for services running on the Graphcool Framework, i.e. all Graphcool versions lower than 1.0
-- [`graphcool`](https://www.npmjs.com/package/graphcool): The new Graphcool CLI for version 1.0
-
-</InfoBox>
-
 ## Installation & Usage
 
 You can install the Graphcool Framework CLI with NPM:
@@ -38,10 +29,9 @@ Or, using the short form of the `graphcool-framework` command:
 gfc init
 ```
 
-
 ## Using command line options
 
-Most of the [CLI commands](!alias-aiteerae6l) accept specific arguments (_options_) that you can provide when invoking the command. 
+Most of the [CLI commands](!alias-aiteerae6l) accept specific arguments (_options_) that you can provide when invoking the command.
 
 For each option that you provide, you can use either of the following two forms:
 
@@ -57,4 +47,4 @@ It is possible to override the `default` option using an environment variable ca
 ```bash
 export GRAPHCOOL_TARGET=shared-eu-west-1/cj8vn13me01er0147a280yhwn
 graphcool-framework deploy # runs without having a .graphcoolrc or overrides its `default` entry
-``` 
+```
