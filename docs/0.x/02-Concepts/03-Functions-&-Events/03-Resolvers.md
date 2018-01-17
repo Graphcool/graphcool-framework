@@ -60,7 +60,7 @@ extend type Query {
 
 Notice that inside your serverless function, you can use the [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) which provides you with a lot of convenience when accessing the GraphQL Engine.  
 
-> **Note**: It's currently not possible to return `@model` types from resolver functions. See [this](https://github.com/graphcool/framework/issues/743) GitHub issue for more info.
+> **Note**: It's currently not possible to return `@model` types from resolver functions. See [this](https://github.com/graphcool/graphcool-framework/issues/743) GitHub issue for more info.
 
 ## Integrating external systems
 

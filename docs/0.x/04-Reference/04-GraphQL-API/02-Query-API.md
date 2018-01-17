@@ -270,9 +270,6 @@ query {
 
 Currently, `count` is the only available aggregation. For specific use cases, you can use [functions](!alias-aiw4aimie9) to precalculate certain aggregations and update them when data changes.
 
-Please join the discussion on [GitHub](https://github.com/graphcool/feature-requests/issues/70) if you are interested in a specific aggregation.
-
-
 ## Relation queries
 
 Every available [relation](!alias-eiroozae8u#relations) in your type definitions adds a new field to the [type queries](#type-queries) of the two connected types.
@@ -550,12 +547,6 @@ query {
 ```
 
 > Note: The field you are ordering by does not have to be selected in the actual query. If you do not specify an ordering, the response is implicitely ordered ascending by the `id` field
-
-
-#### Limitations
-
-It's currently not possible to order responses [by multiple fields](https://github.com/graphcool/feature-requests/issues/62) or [by related fields](https://github.com/graphcool/feature-requests/issues/95). Join the discussion in the feature requests if you're interested in these features!
-
 
 ### Filtering by field
 
@@ -961,38 +952,6 @@ input MetaFilter {
 }
 ```
 
-#### Limitations
-
-Currently, neither [**scalar list filters**](https://github.com/graphcool/feature-requests/issues/60) nor [**JSON filters**](https://github.com/graphcool/feature-requests/issues/148) are available. Join the discussion in the respective feature requests on GitHub!
-
-If you want to filter a list of strings `tags: [String!]!`:
-
-```graphql
-type Item @model {
-  id: ID! @isUnique
-  tags: [String!]!
-}
-```
-
-you can introduce a new type `Tag` with a single `key: String` field and connect `Item` to `Key` one-to-many or many-to-many:
-
-```graphql
-type Item @model {
-  id: ID! @isUnique
-  tags: [Tag!]! @relation(name: "ItemTags")
-}
-
-type Tag {
-  id: ID! @model @isUnique
-  key: String!
-  item: Item @relation(name: "ItemTags")
-}
-```
-
-Now you can filter items based on their connected tags using the `tag_none`, `tags_some` and `tags_every` filters.
-
-
-
 ### Pagination
 
 When querying all nodes of a specific [model type](!alias-eiroozae8u#model-types), you can supply arguments that allow you to _paginate_ the query response.
@@ -1135,12 +1094,6 @@ query {
 ```
 
 > Note: You cannot combine `first` with `before` or `last` with `after`. If you query more nodes than exist, your response will simply contain all nodes that actually do exist in that direction.
-
-#### Limitations
-
-Note that *a maximum of 1000 nodes* can be returned per pagination field. If you need to query more nodes than that, you can use `first` and `skip` to seek through the different pages. You can also include multiple versions of the same field with different pagination parameter in one query using GraphQL Aliases.
-
-Please join [the discussion on GitHub](https://github.com/graphcool/feature-requests/issues/259) for an according feature request to lift this limitation.
 
 ## Custom queries
 

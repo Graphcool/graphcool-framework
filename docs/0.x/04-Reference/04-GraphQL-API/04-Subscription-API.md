@@ -165,7 +165,7 @@ webSocket.send(JSON.stringify(message))
 ```
 
 
-## Type subscriptions 
+## Type subscriptions
 
 For every available [model type](!alias-eiroozae8u#model-types) mutation in your data model, certain subscriptions are automatically generated.
 
@@ -506,9 +506,6 @@ mutation updatePost {
 }
 ```
 
-If you're interested in a direct relation trigger for subscriptions, [please join the discussion on GitHub](https://github.com/graphcool/feature-requests/issues/146).
-
-
 ## Combining subscriptions
 
 You can subscribe to multiple mutations on the same type in one subscription.
@@ -659,4 +656,3 @@ subscription changedPost {
 ```
 
 > Note: Using any of the `updatedFields` filter conditions together with `CREATED` or `DELETED` subscriptions results in an error. `previousValues` is `null` for `CREATED` subscriptions and `updatedFields` is `null` for `CREATED` and `DELETED` subscriptions.
-

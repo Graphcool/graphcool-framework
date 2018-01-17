@@ -76,9 +76,9 @@ permissions:
 # to return `true`; note that this permission only applies to the
 # `text` and `attachments` fields of the `Message` type, no other
 # fields may be updated
-- operation: Message.update 
+- operation: Message.update
   authenticated: true
-  fields: 
+  fields:
     - text
     - attachments
   query: ./permissions/updateMessage.graphql
@@ -99,7 +99,7 @@ permissions:
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields: 
+- fields:
   - firstName
   - lastName
 
@@ -108,8 +108,8 @@ permissions:
 - operation: CustomerMessages.connect
   authenticated: true
 
-# To disconnect a `Message` from a `Customer` node in the 
-# `CustomerMessages`-relation, users need to be authenticated and the 
+# To disconnect a `Message` from a `Customer` node in the
+# `CustomerMessages`-relation, users need to be authenticated and the
 # permission query in `./permissions/disconnectCustomerMessages.graphql`
 # has to return `true`
 - operation: CustomerMessages.disconnect
@@ -321,7 +321,7 @@ functions:
 
 ### `permissions`
 
-The `permissions` root property accepts a **list of [permissions](#definition-permission)**. To see a practical example of the Graphcool permission system, check out this [example](https://github.com/graphcool/framework/tree/master/examples/permissions) service.
+The `permissions` root property accepts a **list of [permissions](#definition-permission)**. To see a practical example of the Graphcool permission system, check out this [example](https://github.com/graphcool/graphcool-framework/tree/master/examples/permissions) service.
 
 #### Definition: `permission`
 
@@ -365,9 +365,9 @@ permissions:
 # to return `true`; note that this permission only applies to the
 # `text` and `attachments` fields of the `Message` type, no other
 # fields may be updated
-- operation: Message.update 
+- operation: Message.update
   authenticated: true
-  fields: 
+  fields:
     - text
     - attachments
   query: ./permissions/updateMessage.graphql
@@ -388,7 +388,7 @@ permissions:
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields: 
+- fields:
   - firstName
   - lastName
 
@@ -397,8 +397,8 @@ permissions:
 - operation: CustomerMessages.connect
   authenticated: true
 
-# To disconnect a `Message` from a `Customer` node in the 
-# `CustomerMessages`-relation, users need to be authenticated and the 
+# To disconnect a `Message` from a `Customer` node in the
+# `CustomerMessages`-relation, users need to be authenticated and the
 # permission query in `./permissions/disconnectCustomerMessages.graphql`
 # has to return `true`
 - operation: CustomerMessages.disconnect

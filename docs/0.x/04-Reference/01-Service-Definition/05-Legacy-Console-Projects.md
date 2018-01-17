@@ -32,7 +32,7 @@ Managing the GraphQL type definitions can still be done both in the Console (in 
 
 Before upgrading your legacy Console project to a Graphcool service, we recommend that you're doing a "dry-run" of the upgrade process to get familiar with the new workflows. 
 
-> You can find more info in [this](https://github.com/graphcool/framework/issues/1186) GitHub issue.
+> You can find more info in [this](https://github.com/graphcool/graphcool-framework/issues/1186) GitHub issue.
 
 #### 1. Obtain your service definition
 

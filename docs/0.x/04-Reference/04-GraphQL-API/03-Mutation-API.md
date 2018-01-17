@@ -63,7 +63,7 @@ the following type mutations will be available:
 * the `deletePost` mutation [deletes an existing node](#deleting-a-node).
 
 
-### Creating a node 
+### Creating a node
 
 Creates a new node for a specific type that gets assigned a new `id`.
 All [required](!alias-eiroozae8u#required) fields of the type without a [default value](!alias-eiroozae8u#default-value) have to be specified, the other fields are optional arguments.
@@ -102,7 +102,7 @@ mutation {
 
 ### Updating a node
 
-Updates [fields](!alias-eiroozae8u#fields) of an existing node of a certain [model type](!alias-eiroozae8u#model-types) specified by the `id` field. The node's fields will be updated according to the additionally provided values. 
+Updates [fields](!alias-eiroozae8u#fields) of an existing node of a certain [model type](!alias-eiroozae8u#model-types) specified by the `id` field. The node's fields will be updated according to the additionally provided values.
 
 The query response can contain all fields of the updated node.
 
@@ -536,16 +536,6 @@ When creating or updating nodes, you can execute _nested mutations_ to interact 
 
 - to **create and connect to a new node** on the other side of a relation, you can use [nested create mutations](#nested-create-mutations).
 - to **connect to an existing node** on the other side of a relation, you can use [nested connect mutations](#nested-connect-mutations).
-
-### Limitations
-
-Different limitations and improvement suggestions are available. Please join the discussion on GitHub!
-
-* [Nested delete mutations](https://github.com/graphcool/feature-requests/issues/42) are not available yet. Neither are [cascading deletes](https://github.com/graphcool/feature-requests/issues/47).
-* Currently, the [maximum nested level is 3](https://github.com/graphcool/feature-requests/issues/313). If you want to nest more often than that, you need to split up the nested mutations into two separate mutations.
-
-Many other [suggestions and improvements](https://github.com/graphcool/feature-requests/issues/127) are currently being discussed.
-
 
 ### Nested create mutations
 

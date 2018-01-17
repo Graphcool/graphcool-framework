@@ -5,7 +5,7 @@ description: Data Import
 
 # Data Import
 
-Data to be imported needs to adhere to the Normalized Data Format (NDF). As of today, the conversion from any concrete data source (like MySQL, MongoDB or Firebase) to NDF must be performed manually. In the [future](https://github.com/graphcool/framework/issues/1410), the Graphcool CLI will support importing from these data sources directly.
+Data to be imported needs to adhere to the Normalized Data Format (NDF). As of today, the conversion from any concrete data source (like MySQL, MongoDB or Firebase) to NDF must be performed manually. In the [future](https://github.com/graphcool/graphcool-framework/issues/1410), the Graphcool CLI will support importing from these data sources directly.
 
 Here is a general overview of the data import process:
 
@@ -23,7 +23,7 @@ Here is a general overview of the data import process:
 
 As mentioned above, step 1 has to be performed manually. Step 2 can then be done by either using the raw import API or the `graphcool-framework import` command from the CLI.
 
-> To view the current state of supported transformations in the CLI and submit a vote for the one you need, you can check out [this](https://github.com/graphcool/framework/issues/1410) GitHub issue.
+> To view the current state of supported transformations in the CLI and submit a vote for the one you need, you can check out [this](https://github.com/graphcool/graphcool-framework/issues/1410) GitHub issue.
 
 When uploading files in NDF, you need to provide the import data split across three different _kinds_ of files:
 
