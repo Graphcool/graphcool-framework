@@ -338,6 +338,8 @@ graphcool local eject
 
 Sign up or login (opens your browser for authentication). The platform token that's received after successful login will be stored in `~/.graphcoolrc`.
 
+> **Note**: To properly use this command in a CI environment, you need to set the `GRAPHCOOL_PLATFORM_TOKEN` environment variable to your token and not use the `--token` option.
+
 #### Usage 
 
 ```sh
