@@ -81,7 +81,7 @@ Then the response to the request that resulted in that error will include the `e
 
 ## Unexpected errors
 
-In case the function failed in an unexpected way, we return a generic error message and an `executionId`. Have a look at your function to fix this problem or reach out to us if you have further questions.
+In case the function failed in an unexpected way, we return a generic error message and an `executionId`. Have a look at your function to fix this problem or check the function logs using `graphcool-framework logs`.
 
 ```json
 {
