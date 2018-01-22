@@ -39,7 +39,7 @@ There are several available building blocks to shape your data model.
 * [Relations](#relations) describe interactions between types.
 * Special [directives](#graphql-directives) that cover different use cases are available.
 
-Additionally, a service can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts-(only-for-legacy-console-projects)). Different [naming conventions](#naming-conventions) define valid names.
+Additionally, a service can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts). Different [naming conventions](#naming-conventions) define valid names.
 
 ### Writing a data model
 
@@ -420,7 +420,7 @@ The name of an enum value can be used in query filters and mutations. They can c
 
 
 
-## System Artifacts (only for [legacy Console projects](!alias-aemieb1aev))
+## System Artifacts
 
 In order to make the platform as seamless and integrated as possible, we introduced some predefined artifacts in each project. These artifacts are designed to be as minimal as possible and cannot be deleted. At the moment there are two type of artifacts: *system types* and *system fields*.
 
