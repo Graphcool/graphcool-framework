@@ -22,7 +22,7 @@ npm install -g graphcool-framework
 Deploy the Graphcool backend and open the GraphQL API endpoint in your browser
 
 ```sh
-graphcool-framework deploy
+graphcool deploy
 # next step: open `https://api.graph.cool/simple/v1/xxx` in your browser
 ```
 

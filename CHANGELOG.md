@@ -1,4 +1,4 @@
-Download the latest Graphcool Framework version with `npm install -g graphcool-framework`.
+Download the latest Graphcool Framework version with `npm install -g graphcool`.
 
 # 0.11.4 (2017-12-22)
 
@@ -6,13 +6,13 @@ Download the latest Graphcool Framework version with `npm install -g graphcool-f
 
 ## Features
 
-- You can now export *and* import data efficiently using the CLI commands `graphcool-framework export` and `graphcool-framework import` https://github.com/graphcool/framework/issues/1299
+- You can now export *and* import data efficiently using the CLI commands `graphcool export` and `graphcool import` https://github.com/graphcool/framework/issues/1299
 
 ## Binary Changes and the Graphcool 1.0 developer preview
 
-The binary for the Graphcool Framework CLI is now called `graphcool-framework`, or `gcf` in short. Here's an overview how different versions can be installed as of now, and going forward:
+The binary for the Graphcool Framework CLI is now called `graphcool`, or `gc` in short. Here's an overview how different versions can be installed as of now, and going forward:
 
-* `npm i -g graphcool-framework`: installs the latest _Framework CLI_ as the binary `graphcool-framework`
+* `npm i -g graphcool`: installs the latest _Framework CLI_ as the binary `graphcool`
 * `npm i -g graphcool@beta`: installs the latest version of [the CLI for the Graphcool 1.0 developer preview](https://github.com/graphcool/framework/pull/1318#issuecomment-353673128) as the binary `graphcool`
 
 Currently, `npm i -g graphcool` installs the latest _Framework CLI_ as well. However, this will be switched to install Graphcool 1.0 once it is officially released at a later stage.

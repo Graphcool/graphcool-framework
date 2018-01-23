@@ -67,10 +67,10 @@ You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-ai
 
 ```sh
 yarn install      # install dependencies
-graphcool-framework deploy  # deploy service
+graphcool deploy  # deploy service
 ```
 
-> Note: Whenever you make changes to files in this directory, you need to invoke `graphcool-framework deploy` again to make sure your changes get applied to the "remote" service.
+> Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
 
 That's it, you're now ready to send queries and mutations against your GraphQL API! 🎉
 
@@ -83,7 +83,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can open a Playground with the following command:
 
 ```sh
-graphcool-framework playground
+graphcool playground
 ```
 
 ### Retrieve `User` nodes from the database with the `allUsers`-query
