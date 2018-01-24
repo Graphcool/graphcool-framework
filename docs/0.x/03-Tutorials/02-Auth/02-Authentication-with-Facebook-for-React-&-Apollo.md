@@ -14,7 +14,7 @@ You're going to build a simple Instagram clone that fulfills the following requi
 - Everyone is able to see all the posts
 - Only authenticated users are able to create new posts
 - Only the author of a post can update or delete it
- 
+
 > You can find the complete example on [GitHub](https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-facebook-and-apollo).
 
 
@@ -33,10 +33,9 @@ cd guide-starters/authentication-with-facebook-and-apollo
 
 </Instruction>
 
-
 ## Setting up your GraphQL server
 
-### Installing the Graphcool CLI 
+### Installing the Graphcool CLI
 
 Before you can start with the actual implementation of the React app, you need to create the GraphQL server your app will run against. You'll create the server using the [Graphcool CLI](!alias-zboghez5go).
 

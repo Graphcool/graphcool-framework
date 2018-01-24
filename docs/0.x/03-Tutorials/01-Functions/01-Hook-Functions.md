@@ -13,7 +13,6 @@ In this article, you'll learn how to use serverless functions to validate an ema
 
 In that sense, they are similar to microservices, where each function represents one microservice, but again, without the developer having to deal with configuration or deployment overhead. Instead, they can take advantage of the server infrastructures of FaaS providers such as [AWS Lambda](https://serverless.com/framework/docs/providers/aws/guide/functions/), [Google Cloud Functions](https://cloud.google.com/functions/) or [StdLib](https://stdlib.com/).
 
-
 ## Graphcool Functions
 
 When using Graphcool, you can use serverless functions to extend the functionality of your backend. A few common use cases are:
