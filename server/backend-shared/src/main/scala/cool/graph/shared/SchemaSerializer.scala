@@ -352,37 +352,27 @@ object SchemaSerializer {
       }
     }
 
-    implicit object managedFunctionFormat extends RootJsonFormat[ManagedFunction] {
-      def write(obj: ManagedFunction) = {
-        obj.codeFilePath match {
-          case Some(codeFilePath) =>
-            JsObject(
-              "codeFilePath" -> JsString(codeFilePath)
-            )
-          case None => JsObject.empty
+    implicit val managedFunctionFormat = jsonFormat2(ManagedFunction.apply)
+
+    implicit class JsValueExtensions(val v: JsValue) extends AnyVal {
+      def ++(jsObject: JsObject): JsObject = {
+        v match {
+          case x: JsObject =>
+            val newFields = x.fields ++ jsObject.fields
+            JsObject(newFields)
+
+          case x =>
+            sys.error("Given value was not a JsObject")
         }
-      }
-
-      def read(value: JsValue): ManagedFunction = {
-        val f = value.asJsObject.fields
-
-        ManagedFunction(
-          codeFilePath = f.get("codeFilePath").map(_.convertTo[String])
-        )
       }
     }
 
     implicit object FunctionDeliveryFormat extends RootJsonFormat[FunctionDelivery] {
-
       def write(obj: FunctionDelivery) = obj match {
         case x: Auth0Function   => x.toJson
         case y: WebhookFunction => y.toJson
-        case z: ManagedFunction =>
-          z.codeFilePath match {
-            case Some(codeFilePath) => JsObject("_isCodeFunction" -> JsBoolean(true), "codeFilePath" -> JsString(codeFilePath))
-            case None               => JsObject("_isCodeFunction" -> JsBoolean(true))
-          }
-        case unknown @ _ => serializationError(s"Marshalling issue with unknown function delivery: $unknown")
+        case z: ManagedFunction => managedFunctionFormat.write(z) ++ JsObject("_isCodeFunction" -> JsBoolean(true))
+        case unknown @ _        => serializationError(s"Marshalling issue with unknown function delivery: $unknown")
       }
 
       def read(value: JsValue): FunctionDelivery = {

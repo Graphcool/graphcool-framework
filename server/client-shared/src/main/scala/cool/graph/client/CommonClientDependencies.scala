@@ -20,7 +20,7 @@ import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, Qu
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, GraphcoolEndpointResolver}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
@@ -73,7 +73,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val rabbitMQUri: String                          = sys.env("RABBITMQ_URI")
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
-  lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
+  lazy val endpointResolver: EndpointResolver           = GraphcoolEndpointResolver()
   lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))

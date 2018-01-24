@@ -30,7 +30,7 @@ case class LocalEndpointResolver() extends EndpointResolver {
   }
 }
 
-case class LiveEndpointResolver() extends EndpointResolver {
+case class GraphcoolEndpointResolver() extends EndpointResolver {
   val awsRegion = sys.env.getOrElse("AWS_REGION", sys.error("AWS_REGION env var required but not found."))
 
   override def endpoints(projectId: String) = {
@@ -54,7 +54,7 @@ case class MockEndpointResolver() extends EndpointResolver {
       simple = s"http://test.cool/simple/v1/$projectId",
       relay = s"http://test.cool/relay/v1/$projectId",
       system = s"http://test.cool/system",
-      subscriptions = s"http://test.cool/subscriptions/v1/$projectId"
+      subscriptions = s"ws://test.cool/subscriptions/v1/$projectId"
     )
   }
 }

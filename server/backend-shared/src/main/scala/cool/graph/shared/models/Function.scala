@@ -137,7 +137,7 @@ case class Auth0Function(code: String, codeFilePath: Option[String] = None, auth
 }
 
 // Function to be deployed and invoked by the function runtime configured for the cluster
-case class ManagedFunction(codeFilePath: Option[String] = None) extends FunctionDelivery {
+case class ManagedFunction(codeFilePath: Option[String] = None, deploymentAccountId: Option[String] = None) extends FunctionDelivery {
   override val functionType = FunctionType.CODE
 }
 

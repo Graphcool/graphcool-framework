@@ -5,9 +5,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.{CompletableFuture, CompletionException}
 
 import com.amazonaws.HttpMethod
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import cool.graph.cuid.Cuid
 import cool.graph.shared.functions._
@@ -55,65 +52,68 @@ object LambdaFunctionEnvironment {
   }
 }
 
-case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: String) extends FunctionEnvironment {
-  val lambdaCredentials = new StaticCredentialsProvider(new AwsCredentials(accessKeyId, secretAccessKey))
+case class LambdaDeploymentAccount(id: String,
+                                   accessKeyID: String,
+                                   accessKey: String,
+                                   deployIamArn: String,
+                                   deploymentBuckets: Vector[LambdaDeploymentBuckets]) {
+
+  lazy val credentialsProvider = new StaticCredentialsProvider(new AwsCredentials(accessKeyID, accessKey))
+
+  def bucket(region: String): String = {
+    ???
+  }
 
   def lambdaClient(project: Project): LambdaAsyncClient =
     LambdaAsyncClient
       .builder()
-      .region(awsRegion(project))
-      .credentialsProvider(lambdaCredentials)
+      .region(Region.of(project.region.toString))
+      .credentialsProvider(credentialsProvider)
       .build()
+}
 
-  val s3Credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey)
+case class LambdaDeploymentBuckets(region: String, deploymentBucket: String)
 
-  def s3Client(project: Project) = {
-    val region = awsRegion(project).toString
+case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) extends FunctionEnvironment {
+//  def awsRegion(project: Project) = project.region match {
+//    case cool.graph.shared.models.Region.EU_WEST_1      => Region.EU_WEST_1
+//    case cool.graph.shared.models.Region.US_WEST_2      => Region.US_WEST_2
+//    case cool.graph.shared.models.Region.AP_NORTHEAST_1 => Region.AP_NORTHEAST_1
+//    case _                                              => Region.EU_WEST_1
+//  }
 
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(s3Credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(s"s3-$region.amazonaws.com", region))
-      .build
+  // Picks a random account for new function deployments
+  // todo how to handle function updates?
+  override def pickDeploymentAccount(): Option[String] = {
+    // todo pick random account
+    ???
   }
 
-  val deployBuckets = Map(
-    cool.graph.shared.models.Region.EU_WEST_1      -> "graphcool-lambda-deploy-eu-west-1",
-    cool.graph.shared.models.Region.US_WEST_2      -> "graphcool-lambda-deploy-us-west-2",
-    cool.graph.shared.models.Region.AP_NORTHEAST_1 -> "graphcool-lambda-deploy-ap-northeast-1"
-  )
-
-  def awsRegion(project: Project) = project.region match {
-    case cool.graph.shared.models.Region.EU_WEST_1      => Region.EU_WEST_1
-    case cool.graph.shared.models.Region.US_WEST_2      => Region.US_WEST_2
-    case cool.graph.shared.models.Region.AP_NORTHEAST_1 => Region.AP_NORTHEAST_1
-    case _                                              => Region.EU_WEST_1
-  }
-
-  def getTemporaryUploadUrl(project: Project): Future[String] = {
+  def getTemporaryUploadUrl(project: Project, deploymentAccountId: Option[String]): Future[String] = {
     val expiration     = new java.util.Date()
     val oneHourFromNow = expiration.getTime + 1000 * 60 * 60
 
     expiration.setTime(oneHourFromNow)
 
-    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(deployBuckets(project.region), Cuid.createCuid())
+    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketResolver.bucketNameForProject(project), Cuid.createCuid())
 
     generatePresignedUrlRequest.setMethod(HttpMethod.PUT)
     generatePresignedUrlRequest.setExpiration(expiration)
 
-    Future.successful(s3Client(project).generatePresignedUrl(generatePresignedUrlRequest).toString)
+    Future.successful(bucketResolver.s3ClientForProject(project).generatePresignedUrl(generatePresignedUrlRequest).toString)
   }
 
-  def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
+  def deploy(project: Project, externalFile: ExternalFile, name: String, deploymentAccountId: Option[String]): Future[DeployResponse] = {
     val key = externalFile.url.split("\\?").head.split("/").last
 
     def create =
       lambdaClient(project)
         .createFunction(
           CreateFunctionRequest.builder
-            .code(FunctionCode.builder().s3Bucket(deployBuckets(project.region)).s3Key(key).build())
+            .code(FunctionCode.builder().s3Bucket(bucketResolver.bucketNameForProject(project)).s3Key(key).build())
             .functionName(lambdaFunctionName(project, name))
             .handler(externalFile.lambdaHandler)
-            .role("arn:aws:iam::484631947980:role/service-role/defaultLambdaFunctionRole")
+            .role(deployIamArn)
             .timeout(15)
             .memorySize(512)
             .runtime(Runtime.Nodejs610)
@@ -125,7 +125,7 @@ case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: Strin
       val updateCode: CompletableFuture[UpdateFunctionCodeResponse] = lambdaClient(project)
         .updateFunctionCode(
           UpdateFunctionCodeRequest.builder
-            .s3Bucket(deployBuckets(project.region))
+            .s3Bucket(bucketResolver.bucketNameForProject(project))
             .s3Key(key)
             .functionName(lambdaFunctionName(project, name))
             .build()
@@ -151,7 +151,7 @@ case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: Strin
     }
   }
 
-  def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
+  def invoke(project: Project, name: String, event: String, deploymentAccountId: Option[String]): Future[InvokeResponse] = {
     lambdaClient(project)
       .invoke(
         InvokeRequest.builder

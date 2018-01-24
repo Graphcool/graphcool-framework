@@ -4,6 +4,7 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.adapters.HttpFunctionHeaders
 import cool.graph.shared.database.InternalAndProjectDbs
 import cool.graph.shared.errors.UserInputErrors.ServerSideSubscriptionQueryIsInvalid
+import cool.graph.shared.functions.FunctionEnvironment
 import cool.graph.shared.models
 import cool.graph.shared.models.FunctionType.FunctionType
 import cool.graph.shared.models._
@@ -14,14 +15,18 @@ import cool.graph.system.mutactions.internal.{BumpProjectRevision, CreateFunctio
 import cool.graph.{InternalProjectMutation, Mutaction}
 import org.scalactic.Bad
 import sangria.relay.Mutation
-import scaldi.Injector
+import scaldi.{Injectable, Injector}
 
-case class AddServerSideSubscriptionFunctionMutation(client: models.Client,
-                                                     project: models.Project,
-                                                     args: AddServerSideSubscriptionFunctionInput,
-                                                     projectDbsFn: models.Project => InternalAndProjectDbs)(implicit inj: Injector)
-    extends InternalProjectMutation[AddServerSideSubscriptionFunctionMutationPayload] {
+case class AddServerSideSubscriptionFunctionMutation(
+    client: models.Client,
+    project: models.Project,
+    args: AddServerSideSubscriptionFunctionInput,
+    projectDbsFn: models.Project => InternalAndProjectDbs
+)(implicit inj: Injector)
+    extends InternalProjectMutation[AddServerSideSubscriptionFunctionMutationPayload]
+    with Injectable {
 
+  val functionRuntime = inject[FunctionEnvironment]
   val newDelivery: FunctionDelivery = args.functionType match {
     case FunctionType.WEBHOOK =>
       WebhookFunction(url = URLValidation.getAndValidateURL(args.name, args.url), headers = HttpFunctionHeaders.read(args.headers))
@@ -36,7 +41,10 @@ case class AddServerSideSubscriptionFunctionMutation(client: models.Client,
       )
 
     case FunctionType.CODE if args.inlineCode.isEmpty =>
-      ManagedFunction(args.codeFilePath)
+      ManagedFunction(
+        codeFilePath = args.codeFilePath,
+        deploymentAccountId = functionRuntime.pickDeploymentAccount()
+      )
   }
 
   val newFunction = ServerSideSubscriptionFunction(

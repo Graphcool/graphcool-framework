@@ -18,7 +18,7 @@ import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPu
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices._
-import cool.graph.shared.functions.LiveEndpointResolver
+import cool.graph.shared.functions.GraphcoolEndpointResolver
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
@@ -128,7 +128,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   )
 
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
-  lazy val endpointResolver                             = LiveEndpointResolver()
+  lazy val endpointResolver                             = GraphcoolEndpointResolver()
   lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherMock

@@ -183,6 +183,7 @@ object InternalDatabaseSchema {
         `serversideSubscriptionQuery` text CHARACTER SET utf8,
         `serversideSubscriptionQueryFilePath` text CHARACTER SET utf8 DEFAULT NULL,
         `lambdaArn` varchar(1000) COLLATE utf8_unicode_ci DEFAULT NULL,
+        `deploymentAccountId` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
         `webhookUrl` text CHARACTER SET utf8,
         `webhookHeaders` text CHARACTER SET utf8,
         `inlineCode` mediumtext CHARACTER SET utf8,

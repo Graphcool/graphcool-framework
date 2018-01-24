@@ -60,6 +60,7 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = Some(query),
           serversideSubscriptionQueryFilePath = queryFilePath,
           lambdaArn = None,
+          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -83,6 +84,7 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = None,
           serversideSubscriptionQueryFilePath = None,
           lambdaArn = None,
+          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -106,6 +108,7 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = None,
           serversideSubscriptionQueryFilePath = None,
           lambdaArn = None,
+          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -129,6 +132,7 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = None,
           serversideSubscriptionQueryFilePath = None,
           lambdaArn = None,
+          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -150,6 +154,7 @@ object ModelToDbMapper {
           webhookUrl = Some(fn.url),
           webhookHeaders = Some(HttpFunctionHeaders.write(fn.headers).toString)
         )
+
       case fn: Auth0Function =>
         dbFunction.copy(
           functionType = FunctionType.CODE,
@@ -159,11 +164,14 @@ object ModelToDbMapper {
           inlineCode = Some(fn.code),
           inlineCodeFilePath = fn.codeFilePath
         )
+
       case fn: ManagedFunction =>
         dbFunction.copy(
           functionType = FunctionType.CODE,
-          inlineCodeFilePath = fn.codeFilePath
+          inlineCodeFilePath = fn.codeFilePath,
+          deploymentAccountId = fn.deploymentAccountId
         )
+
 //      case fn: LambdaFunction =>
 //        dbFunction.copy(
 //          functionType = FunctionType.LAMBDA,
