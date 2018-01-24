@@ -159,7 +159,13 @@ case class RequestHandler(
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val resultFuture = graphQlRequestHandler.handle(graphQlRequest)
-    resultFuture.onComplete(_ => graphQlRequest.logger.end(graphQlRequest.project.id, Some(graphQlRequest.projectWithClientId.clientId)))
+    resultFuture.onComplete { _ =>
+      graphQlRequest.logger.end(
+        projectId = graphQlRequest.project.id,
+        clientId = Some(graphQlRequest.projectWithClientId.clientId),
+        query = Some(graphQlRequest.queries.map(_.queryString).mkString("\n"))
+      )
+    }
 
     resultFuture.recover {
       case error: Throwable =>

@@ -24,7 +24,7 @@ class RequestLogger(requestIdPrefix: String, log: Function[String, Unit]) {
     requestId
   }
 
-  def end(projectId: String, clientId: Option[String] = None): Unit =
+  def end(projectId: String, clientId: Option[String], query: Option[String] = None): Unit =
     requestBeginningTime match {
       case None =>
         sys.error("you must call begin before end")
@@ -32,13 +32,18 @@ class RequestLogger(requestIdPrefix: String, log: Function[String, Unit]) {
       case Some(beginTime) =>
         val duration = System.currentTimeMillis() - beginTime
         BackendSharedMetrics.requestDuration.record(duration, Seq(projectId))
+        val payload = if (duration >= 1500) {
+          Map("request_duration" -> duration, "query" -> query.getOrElse("query not captured"))
+        } else {
+          Map("request_duration" -> duration)
+        }
         log(
           LogData(
             key = LogKey.RequestComplete,
             requestId = requestId,
             projectId = Some(projectId),
             clientId = clientId,
-            payload = Some(Map("request_duration" -> duration))
+            payload = Some(payload)
           ).json
         )
     }
