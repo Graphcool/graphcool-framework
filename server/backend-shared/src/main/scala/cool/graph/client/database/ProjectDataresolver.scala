@@ -145,7 +145,7 @@ class ProjectDataresolver(override val project: Project, override val requestCon
         .batchSelectAllFromRelatedModel(project, fromField, fromModelIds, args)
 
     performWithTiming(
-      "resolveByRelation",
+      "resolveByRelationMany",
       readonlyClientDatabase
         .run(readOnlyDataItem(query))
         .map(_.toList.map(mapDataItem(fromField.relatedModel(project).get)))

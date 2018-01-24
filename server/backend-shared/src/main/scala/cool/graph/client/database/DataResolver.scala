@@ -37,8 +37,7 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
     else globalDatabaseManager.getDbForProject(project).readOnly
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
-    val begin = System.currentTimeMillis()
-    sqlQueryTimer.time(project.id, name) {
+    sqlQueryTimer.timeFuture(project.id, name) {
       f
     }
   }

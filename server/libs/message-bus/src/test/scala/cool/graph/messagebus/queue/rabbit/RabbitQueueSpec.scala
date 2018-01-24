@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 
 import akka.actor.ActorSystem
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.bugsnag.BugSnagger
+import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.queue.ConstantBackoff
 import cool.graph.messagebus.utils.RabbitUtils
 import cool.graph.rabbit.Bindings.RoutingKey
@@ -27,7 +27,7 @@ class RabbitQueueSpec
   val amqpUri                                          = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
   implicit val testMarshaller: String => Array[Byte]   = str => str.getBytes("utf-8")
   implicit val testUnmarshaller: Array[Byte] => String = bytes => new String(bytes, Charset.forName("UTF-8"))
-  implicit val bugSnagger: BugSnagger                  = null
+  implicit val bugSnagger: BugSnagger                  = BugSnaggerMock
 
   var rabbitQueue: RabbitQueue[String]        = _
   var failingRabbitQueue: RabbitQueue[String] = _
@@ -91,17 +91,17 @@ class RabbitQueueSpec
 
     "increment the message tries correctly on failure" in {
       val testMsg    = "test"
-      val errorProbe = TestProbe()
+      val probe = TestProbe()
 
       plainQueueConsumer("test-failing", "test-failing-2", "msg.#", autoDelete = true, (d: Delivery) => {
-        errorProbe.ref ! d.envelope.getRoutingKey
+        probe.ref ! d.envelope.getRoutingKey
       })
 
       failingRabbitQueue.publish(testMsg)
-      errorProbe.expectMsgAllOf(10.seconds, "msg.0", "msg.1", "msg.2", "msg.3", "msg.4", "msg.5")
+      probe.expectMsgAllOf(10.seconds, "msg.0", "msg.1", "msg.2", "msg.3", "msg.4", "msg.5")
     }
 
-    "put the message into the error queue if it failed MAX_TRIES (5) times" in {
+    "put the message into the error queue if it failed MAX_TRIES (5) times" ignore { // we disabled the error queue for now
       val testMsg     = "test"
       val errorQProbe = TestProbe()
 
