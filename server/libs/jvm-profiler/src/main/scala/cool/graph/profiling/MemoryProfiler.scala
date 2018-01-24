@@ -2,25 +2,7 @@ package cool.graph.profiling
 
 import java.lang.management.{GarbageCollectorMXBean, ManagementFactory, MemoryUsage}
 
-import akka.actor.Cancellable
 import cool.graph.metrics.MetricsManager
-
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
-
-object MemoryProfiler {
-  def schedule(
-      metricsManager: MetricsManager,
-      initialDelay: FiniteDuration = 0.seconds,
-      interval: FiniteDuration = 5.seconds
-  ): Cancellable = {
-    import metricsManager.gaugeFlushSystem.dispatcher
-    val profiler = MemoryProfiler(metricsManager)
-    metricsManager.gaugeFlushSystem.scheduler.schedule(initialDelay, interval) {
-      profiler.profile()
-    }
-  }
-}
 
 case class MemoryProfiler(metricsManager: MetricsManager) {
   import scala.collection.JavaConversions._
