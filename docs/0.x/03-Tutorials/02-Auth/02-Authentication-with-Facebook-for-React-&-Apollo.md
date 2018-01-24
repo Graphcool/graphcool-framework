@@ -17,7 +17,6 @@ You're going to build a simple Instagram clone that fulfills the following requi
 
 > You can find the complete example on [GitHub](https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-facebook-and-apollo).
 
-
 ## Getting started
 
 The first thing you need to do is download the starter project for this guide.
@@ -57,7 +56,7 @@ Now that the CLI is installed, you can use it to create the file structure for a
 
 ```bash(path="server")
 # Create a the file structure for a new Graphcool service in
-# a directory called `server` 
+# a directory called `server`
 graphcool init server
 ```
 
