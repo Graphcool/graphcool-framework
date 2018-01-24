@@ -1,7 +1,7 @@
 package cool.graph.system.metrics
 
 import cool.graph.metrics.{CustomTag, MetricsManager}
-import cool.graph.profiling.MemoryProfiler
+import cool.graph.profiling.JvmProfiler
 
 object SystemMetrics extends MetricsManager {
   // this is intentionally empty. Since we don't define metrics here, we need to load the object once so the profiler kicks in.
@@ -18,5 +18,5 @@ object SystemMetrics extends MetricsManager {
       }
       .mkString
 
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 }

@@ -1,10 +1,10 @@
 package cool.graph.websockets.metrics
 
 import cool.graph.metrics.MetricsManager
-import cool.graph.profiling.MemoryProfiler
+import cool.graph.profiling.JvmProfiler
 
 object SubscriptionWebsocketMetrics extends MetricsManager {
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 
   override def serviceName = "SubscriptionWebsocketService"
 

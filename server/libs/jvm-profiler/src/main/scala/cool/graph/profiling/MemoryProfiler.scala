@@ -2,25 +2,10 @@ package cool.graph.profiling
 
 import java.lang.management.{GarbageCollectorMXBean, ManagementFactory, MemoryUsage}
 
-import akka.actor.Cancellable
+import com.sun.management.ThreadMXBean
 import cool.graph.metrics.MetricsManager
 
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
-
-object MemoryProfiler {
-  def schedule(
-      metricsManager: MetricsManager,
-      initialDelay: FiniteDuration = 0.seconds,
-      interval: FiniteDuration = 5.seconds
-  ): Cancellable = {
-    import metricsManager.gaugeFlushSystem.dispatcher
-    val profiler = MemoryProfiler(metricsManager)
-    metricsManager.gaugeFlushSystem.scheduler.schedule(initialDelay, interval) {
-      profiler.profile()
-    }
-  }
-}
+import scala.util.{Failure, Success, Try}
 
 case class MemoryProfiler(metricsManager: MetricsManager) {
   import scala.collection.JavaConversions._
@@ -29,11 +14,49 @@ case class MemoryProfiler(metricsManager: MetricsManager) {
   val memoryMxBean             = ManagementFactory.getMemoryMXBean
   val heapMemoryMetrics        = MemoryMetrics(metricsManager, initialMemoryUsage = memoryMxBean.getHeapMemoryUsage, prefix = "heap")
   val offHeapMemoryMetrics     = MemoryMetrics(metricsManager, initialMemoryUsage = memoryMxBean.getNonHeapMemoryUsage, prefix = "off-heap")
+  val allocationMetrics = {
+    val threadMxBean = ManagementFactory.getThreadMXBean match {
+      case x: ThreadMXBean =>
+        Some(x)
+      case _ =>
+        println("com.sun.management.ThreadMXBean is not available on this JVM. Memory Allocation Metrics are therefore not available.")
+        None
+    }
+    AllocationMetrics(metricsManager, threadMxBean)
+  }
 
   def profile(): Unit = {
     heapMemoryMetrics.record(memoryMxBean.getHeapMemoryUsage)
     offHeapMemoryMetrics.record(memoryMxBean.getNonHeapMemoryUsage)
     garbageCollectionMetrics.foreach(_.record)
+  }
+}
+
+case class AllocationMetrics(metricsManager: MetricsManager, mxBean: Option[ThreadMXBean]) {
+
+  val allocationRate = metricsManager.defineCounter("memoryAllocationRateInKb")
+
+  val isThreadAllocatedMemoryEnabled = Try {
+    mxBean match {
+      case Some(mxBean) => mxBean.isThreadAllocatedMemoryEnabled
+      case None         => false
+    }
+  } match {
+    case Success(x) => x
+    case Failure(_) => false
+  }
+
+  def record(): Unit = {
+    mxBean.foreach { mxBean =>
+      if (isThreadAllocatedMemoryEnabled) {
+        val ids         = mxBean.getAllThreadIds
+        val allocations = mxBean.getThreadAllocatedBytes(ids)
+        allocations.foreach { allocation =>
+          val inKiloBytes = allocation / 1024
+          allocationRate.incBy(inKiloBytes)
+        }
+      }
+    }
   }
 }
 

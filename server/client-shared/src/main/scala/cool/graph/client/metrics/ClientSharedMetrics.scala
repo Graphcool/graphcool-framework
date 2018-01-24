@@ -1,6 +1,6 @@
 package cool.graph.metrics
 
-import cool.graph.profiling.MemoryProfiler
+import cool.graph.profiling.JvmProfiler
 
 object ClientSharedMetrics extends MetricsManager {
 
@@ -14,7 +14,7 @@ object ClientSharedMetrics extends MetricsManager {
       }
       .mkString
 
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 
   val schemaBuilderBuildTimerMetric = defineTimer("schemaBuilderBuildTimer", CustomTag("projectId", recordingThreshold = 600))
   val projectCacheGetCount          = defineCounter("projectCacheGetCount")

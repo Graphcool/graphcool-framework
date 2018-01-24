@@ -48,7 +48,7 @@ case class RequestHandler(
         log = log
       )
       resultFuture = introspectionQueryHandler.handle(requestId = requestLogger.requestId, requestIp = "not-used", clientId = project.clientId)
-      _            = resultFuture.onComplete(_ => requestLogger.end(Some(project.project.id), Some(project.clientId)))
+      _            = resultFuture.onComplete(_ => requestLogger.end(project.project.id, Some(project.clientId)))
       result       <- resultFuture
     } yield result
   }
@@ -159,7 +159,13 @@ case class RequestHandler(
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val resultFuture = graphQlRequestHandler.handle(graphQlRequest)
-    resultFuture.onComplete(_ => graphQlRequest.logger.end(Some(graphQlRequest.project.id), Some(graphQlRequest.projectWithClientId.clientId)))
+    resultFuture.onComplete { _ =>
+      graphQlRequest.logger.end(
+        projectId = graphQlRequest.project.id,
+        clientId = Some(graphQlRequest.projectWithClientId.clientId),
+        query = Some(graphQlRequest.queries.map(_.queryString).mkString("\n"))
+      )
+    }
 
     resultFuture.recover {
       case error: Throwable =>
