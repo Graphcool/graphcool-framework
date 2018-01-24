@@ -143,7 +143,7 @@ object Server extends App with LazyLogging {
                 requestIp = "ip.toString"
               ).andThen {
                 case _ =>
-                  requestLogger.end(Some(x.project.id), Some(x.clientId))
+                  requestLogger.end(x.project.id, Some(x.clientId))
               }
             }
             .map {

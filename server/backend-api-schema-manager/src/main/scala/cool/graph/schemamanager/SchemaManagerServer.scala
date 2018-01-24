@@ -77,7 +77,7 @@ case class SchemaManagerServer(prefix: String = "")(
     getSchema(projectId, forceRefresh)
       .map(res => OK -> res)
       .andThen {
-        case _ => requestLogger.end(Some(projectId), None)
+        case _ => requestLogger.end(projectId, None)
       }
       .recover {
         case error: Throwable =>
