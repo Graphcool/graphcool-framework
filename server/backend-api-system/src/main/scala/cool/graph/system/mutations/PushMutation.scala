@@ -211,7 +211,11 @@ object DeployMutactions {
       val setGlobalStarPermissionMutaction = UpdateProject(
         client = client,
         oldProject = project,
-        project = getProject.copy(hasGlobalStarPermission = setsGlobalStarPermission),
+        project = getProject.copy(
+          hasGlobalStarPermission = setsGlobalStarPermission,
+          activeFunctionDeploymentAccount = project.nextFunctionDeploymentAccount,
+          nextFunctionDeploymentAccount = None
+        ),
         internalDatabase = internalDatabase.databaseDef,
         projectQueries = projectQueries,
         bumpRevision = shouldBump

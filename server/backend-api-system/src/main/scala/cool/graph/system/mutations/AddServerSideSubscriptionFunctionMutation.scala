@@ -41,10 +41,7 @@ case class AddServerSideSubscriptionFunctionMutation(
       )
 
     case FunctionType.CODE if args.inlineCode.isEmpty =>
-      ManagedFunction(
-        codeFilePath = args.codeFilePath,
-        deploymentAccountId = functionRuntime.pickDeploymentAccount()
-      )
+      ManagedFunction(codeFilePath = args.codeFilePath)
   }
 
   val newFunction = ServerSideSubscriptionFunction(
@@ -56,7 +53,14 @@ case class AddServerSideSubscriptionFunctionMutation(
     delivery = newDelivery
   )
 
-  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction)
+  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction, nextFunctionDeploymentAccount = nextActiveDeploymentAccount())
+
+  private def nextActiveDeploymentAccount(): Option[String] = {
+    project.nextFunctionDeploymentAccount match {
+      case x @ Some(_) => x
+      case None        => functionRuntime.pickDeploymentAccount()
+    }
+  }
 
   override def prepareActions(): List[Mutaction] = {
     this.actions = List(CreateFunction(project, newFunction), BumpProjectRevision(project = project), InvalidateSchema(project))

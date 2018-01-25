@@ -9,10 +9,18 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import cool.graph.cuid.Cuid
 import cool.graph.shared.functions._
 import cool.graph.shared.models.Project
-import software.amazon.awssdk.auth.{AwsCredentials, StaticCredentialsProvider}
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.lambda.LambdaAsyncClient
-import software.amazon.awssdk.services.lambda.model.{CreateFunctionRequest, FunctionCode, InvocationType, InvokeRequest, LogType, ResourceConflictException, Runtime, UpdateFunctionCodeRequest, UpdateFunctionCodeResponse, UpdateFunctionConfigurationRequest}
+import software.amazon.awssdk.services.lambda.model.{
+  CreateFunctionRequest,
+  FunctionCode,
+  InvocationType,
+  InvokeRequest,
+  LogType,
+  ResourceConflictException,
+  Runtime,
+  UpdateFunctionCodeRequest,
+  UpdateFunctionCodeResponse,
+  UpdateFunctionConfigurationRequest
+}
 import spray.json.{JsArray, JsObject, JsString}
 
 import scala.compat.java8.FutureConverters._
@@ -42,75 +50,41 @@ object LambdaFunctionEnvironment {
   }
 }
 
-case class LambdaDeploymentAccount(id: String,
-                                   accessKeyID: String,
-                                   accessKey: String,
-                                   deployIamArn: String,
-                                   deploymentBuckets: Vector[LambdaDeploymentBuckets]) {
-
-  lazy val credentialsProvider = new StaticCredentialsProvider(new AwsCredentials(accessKeyID, accessKey))
-
-  def bucket(region: String): String = {
-    deploymentBuckets.find(_.region == region).getOrElse(sys.error("Region is not supported for lambda deployment")).deploymentBucket
-  }
-
-  def lambdaClient(project: Project): LambdaAsyncClient =
-    LambdaAsyncClient
-      .builder()
-      .region(Region.of(project.region.toString))
-      .credentialsProvider(credentialsProvider)
-      .build()
-}
-
-case class LambdaDeploymentBuckets(region: String, deploymentBucket: String)
-
 case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) extends FunctionEnvironment {
-//  def awsRegion(project: Project) = project.region match {
-//    case cool.graph.shared.models.Region.EU_WEST_1      => Region.EU_WEST_1
-//    case cool.graph.shared.models.Region.US_WEST_2      => Region.US_WEST_2
-//    case cool.graph.shared.models.Region.AP_NORTHEAST_1 => Region.AP_NORTHEAST_1
-//    case _                                              => Region.EU_WEST_1
-//  }
-
   private val idsToAccounts = accounts.map(a => a.id -> a).toMap
-  private def accountForId(accountId: String): LambdaDeploymentAccount = idsToAccounts.getOrElse(accountId, sys.error(s"Account $accountId not configured."))
+  private def accountForId(accountId: Option[String]): LambdaDeploymentAccount =
+    idsToAccounts.getOrElse(accountId.getOrElse("default"), sys.error(s"Account $accountId not configured."))
 
-  // Picks a random account for new function deployments
-  // todo how to handle function updates?
+  // Picks a random account for new function deployments, ignoring disabled account
   override def pickDeploymentAccount(): Option[String] = {
-    Random.shuffle(accounts.filter(_.id == "default")).headOption.map(_.id)
+    Random.shuffle(accounts.filter(_.deploymentEnabled)).headOption.map(_.id)
   }
 
-  def getTemporaryUploadUrl(project: Project, deploymentAccountId: Option[String]): Future[String] = {
-    val account = deploymentAccountId match {
-      case Some(id) => idsToAccounts.getOrElse(id, sys.error(s"Account $deploymentAccountId not configured."))
-      case None => idsToAccounts("default")
-    }
-
-    val expiration     = new java.util.Date()
-    val oneHourFromNow = expiration.getTime + 1000 * 60 * 60
+  def getTemporaryUploadUrl(project: Project): String = {
+    val account                     = accountForId(project.nextFunctionDeploymentAccount)
+    val expiration                  = new java.util.Date()
+    val oneHourFromNow              = expiration.getTime + 1000 * 60 * 60
+    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(account.bucket(project), Cuid.createCuid())
 
     expiration.setTime(oneHourFromNow)
-
-    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(accounts., Cuid.createCuid())
-
     generatePresignedUrlRequest.setMethod(HttpMethod.PUT)
     generatePresignedUrlRequest.setExpiration(expiration)
-
-    Future.successful(bucketResolver.s3ClientForProject(project).generatePresignedUrl(generatePresignedUrlRequest).toString)
+    account.s3Client(project).generatePresignedUrl(generatePresignedUrlRequest).toString
   }
 
-  def deploy(project: Project, externalFile: ExternalFile, name: String, deploymentAccountId: Option[String]): Future[DeployResponse] = {
-    val key = externalFile.url.split("\\?").head.split("/").last
+  def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
+    val key     = externalFile.url.split("\\?").head.split("/").last
+    val account = accountForId(project.nextFunctionDeploymentAccount)
 
     def create =
-      lambdaClient(project)
+      account
+        .lambdaClient(project)
         .createFunction(
           CreateFunctionRequest.builder
-            .code(FunctionCode.builder().s3Bucket(bucketResolver.bucketNameForProject(project)).s3Key(key).build())
+            .code(FunctionCode.builder().s3Bucket(account.bucket(project)).s3Key(key).build())
             .functionName(lambdaFunctionName(project, name))
             .handler(externalFile.lambdaHandler)
-            .role(deployIamArn)
+            .role(account.deployIamArn)
             .timeout(15)
             .memorySize(512)
             .runtime(Runtime.Nodejs610)
@@ -118,23 +92,29 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
         .toScala
         .map(_ => DeploySuccess())
 
+    //CodeStorageExceededException
+
     def update = {
-      val updateCode: CompletableFuture[UpdateFunctionCodeResponse] = lambdaClient(project)
+      val updateCode: CompletableFuture[UpdateFunctionCodeResponse] = account
+        .lambdaClient(project)
         .updateFunctionCode(
           UpdateFunctionCodeRequest.builder
-            .s3Bucket(bucketResolver.bucketNameForProject(project))
+            .s3Bucket(account.bucket(project))
             .s3Key(key)
             .functionName(lambdaFunctionName(project, name))
             .build()
         )
 
-      lazy val updateConfiguration = lambdaClient(project)
+      lazy val updateConfiguration = account
+        .lambdaClient(project)
         .updateFunctionConfiguration(
           UpdateFunctionConfigurationRequest.builder
             .functionName(lambdaFunctionName(project, name))
             .handler(externalFile.lambdaHandler)
             .build()
         )
+
+      // todo catch
 
       for {
         _ <- updateCode.toScala
@@ -148,8 +128,11 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
     }
   }
 
-  def invoke(project: Project, name: String, event: String, deploymentAccountId: Option[String]): Future[InvokeResponse] = {
-    lambdaClient(project)
+  def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
+    val account = accountForId(project.nextFunctionDeploymentAccount)
+
+    account
+      .lambdaClient(project)
       .invoke(
         InvokeRequest.builder
           .functionName(lambdaFunctionName(project, name))
@@ -165,7 +148,6 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
           val logMessage                 = Base64.decodeString(response.logResult())
           val logLines                   = LambdaFunctionEnvironment.parseLambdaLogs(logMessage)
           val returnValueWithLogEnvelope = s"""{"logs":${JsArray(logLines).compactPrint}, "response": $returnValue}"""
-
           InvokeSuccess(returnValue = returnValueWithLogEnvelope)
         } else {
           InvokeFailure(sys.error(s"statusCode was ${response.statusCode()}"))

@@ -121,9 +121,7 @@ object DbToModelMapper {
             )
 
           case models.FunctionType.CODE if function.inlineCode.isEmpty =>
-            models.ManagedFunction(
-              deploymentAccountId = function.deploymentAccountId
-            )
+            models.ManagedFunction()
 
 //          case models.FunctionType.LAMBDA =>
 //            models.LambdaFunction(

@@ -36,10 +36,7 @@ case class AddSchemaExtensionFunctionMutation(
       )
 
     case FunctionType.CODE if args.inlineCode.isEmpty =>
-      ManagedFunction(
-        codeFilePath = args.codeFilePath,
-        deploymentAccountId = functionRuntime.pickDeploymentAccount()
-      )
+      ManagedFunction(codeFilePath = args.codeFilePath)
   }
 
   val newFunction: SchemaExtensionFunction = SchemaExtensionFunction.createFunction(
@@ -51,7 +48,14 @@ case class AddSchemaExtensionFunctionMutation(
     schemaFilePath = args.schemaFilePath
   )
 
-  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction)
+  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction, nextFunctionDeploymentAccount = nextActiveDeploymentAccount())
+
+  private def nextActiveDeploymentAccount(): Option[String] = {
+    project.nextFunctionDeploymentAccount match {
+      case x @ Some(_) => x
+      case None        => functionRuntime.pickDeploymentAccount()
+    }
+  }
 
   override def prepareActions(): List[Mutaction] = {
     this.actions = List(CreateFunction(project, newFunction), BumpProjectRevision(project = project), InvalidateSchema(project))

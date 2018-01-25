@@ -126,7 +126,9 @@ case class Project(
     featureToggles: List[FeatureToggle] = List.empty,
     typePositions: List[Id] = List.empty,
     isEjected: Boolean = false,
-    hasGlobalStarPermission: Boolean = false
+    hasGlobalStarPermission: Boolean = false,
+    activeFunctionDeploymentAccount: Option[String] = None,
+    nextFunctionDeploymentAccount: Option[String] = None
 ) extends Node {
 
   val requestPipelineFunctions: List[RequestPipelineFunction]               = functions.collect { case x: RequestPipelineFunction => x }

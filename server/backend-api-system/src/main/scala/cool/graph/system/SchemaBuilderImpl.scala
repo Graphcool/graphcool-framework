@@ -16,7 +16,7 @@ import cool.graph.system.schema.fields._
 import cool.graph.system.schema.types._
 import sangria.relay.{Connection, ConnectionDefinition, Edge, Mutation}
 import sangria.schema.{Field, ObjectType, OptionType, Schema, StringType, UpdateCtx, fields}
-import scaldi.{Injectable, Injector}
+import scaldi.Injector
 
 import scala.concurrent.Future
 
@@ -93,7 +93,6 @@ class SchemaBuilderImpl(
         ),
         mutateAndGetPayload = (input, ctx) =>
           UpdateCtx({
-
             for {
               project <- getProjectOrThrow(input.projectId)
               mutator = PushMutation(
@@ -121,8 +120,6 @@ class SchemaBuilderImpl(
   def getTemporaryDeployUrl: Field[SystemUserContext, Unit] = {
     import GetTemporaryDeploymentUrl.fromInput
 
-    case class GetTemporaryDeployUrlPayload(url: String, clientMutationId: Option[String] = None) extends Mutation
-
     Mutation
       .fieldWithClientMutationId[SystemUserContext, Unit, GetTemporaryDeployUrlPayload, GetTemporaryDeployUrlInput](
         fieldName = "getTemporaryDeployUrl",
@@ -131,12 +128,18 @@ class SchemaBuilderImpl(
         outputFields = fields(
           Field("url", StringType, resolve = ctx => ctx.value.url)
         ),
-        mutateAndGetPayload = (input, ctx) =>
+        mutateAndGetPayload = (input, ctx) => {
           for {
-            project      <- getProjectOrThrow(input.projectId)
-            temporaryUrl <- functionEnvironment.getTemporaryUploadUrl(project.project)
+            project <- getProjectOrThrow(input.projectId)
+            result <- GetTemporaryUploadUrlMutation(
+                       client = ctx.ctx.getClient,
+                       args = input,
+                       internalDatabase = internalDatabase,
+                       project = project.project
+                     ).run()
           } yield {
-            GetTemporaryDeployUrlPayload(temporaryUrl, None)
+            result
+          }
         }
       )
   }

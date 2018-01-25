@@ -25,12 +25,12 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
   val functionEndpointExternal: String =
     sys.env.getOrElse("FUNCTION_ENDPOINT_EXTERNAL", sys.error("FUNCTION_ENDPOINT_EXTERNAL env var required for dev function deployment.")).stripSuffix("/")
 
-  override def getTemporaryUploadUrl(project: Project, deploymentAccountId: Option[String]): Future[String] = {
+  override def getTemporaryUploadUrl(project: Project): String = {
     val deployId = Cuid.createCuid()
-    Future.successful(s"$functionEndpointExternal/functions/files/${project.id}/$deployId")
+    s"$functionEndpointExternal/functions/files/${project.id}/$deployId"
   }
 
-  override def deploy(project: Project, externalFile: ExternalFile, name: String, deploymentAccountId: Option[String]): Future[DeployResponse] = {
+  override def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
     httpClient
       .postJson(s"$functionEndpointInternal/functions/deploy/${project.id}", DeploymentInput(externalFile.url, externalFile.devHandler, name))
       .map { response =>
@@ -50,7 +50,7 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
       }
   }
 
-  override def invoke(project: Project, name: String, event: String, deploymentAccountId: Option[String]): Future[InvokeResponse] = {
+  override def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
     httpClient
       .postJson(s"$functionEndpointInternal/functions/invoke/${project.id}", FunctionInvocation(name, event))
       .map { response =>

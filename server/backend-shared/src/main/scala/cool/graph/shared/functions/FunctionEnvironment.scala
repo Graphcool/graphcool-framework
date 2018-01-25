@@ -5,9 +5,9 @@ import scala.concurrent.Future
 
 trait FunctionEnvironment {
   def pickDeploymentAccount(): Option[String]
-  def getTemporaryUploadUrl(project: Project, deploymentAccountId: Option[String]): Future[String]
-  def deploy(project: Project, externalFile: ExternalFile, name: String, deploymentAccountId: Option[String]): Future[DeployResponse]
-  def invoke(project: Project, name: String, event: String, deploymentAccountId: Option[String]): Future[InvokeResponse]
+  def getTemporaryUploadUrl(project: Project): String
+  def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse]
+  def invoke(project: Project, name: String, event: String): Future[InvokeResponse]
 }
 
 sealed trait DeployResponse

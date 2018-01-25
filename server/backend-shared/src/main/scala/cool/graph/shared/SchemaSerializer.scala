@@ -352,7 +352,7 @@ object SchemaSerializer {
       }
     }
 
-    implicit val managedFunctionFormat = jsonFormat2(ManagedFunction.apply)
+    implicit val managedFunctionFormat = jsonFormat1(ManagedFunction.apply)
 
     implicit class JsValueExtensions(val v: JsValue) extends AnyVal {
       def ++(jsObject: JsObject): JsObject = {
@@ -470,28 +470,30 @@ object SchemaSerializer {
 
       def write(obj: Project) = {
         JsObject(
-          "id"                      -> JsString(obj.id),
-          "name"                    -> JsString(obj.name),
-          "projectDatabase"         -> obj.projectDatabase.toJson,
-          "ownerId"                 -> obj.ownerId.toJson,
-          "alias"                   -> obj.alias.toJson,
-          "revision"                -> obj.revision.toJson,
-          "webhookUrl"              -> obj.webhookUrl.toJson,
-          "models"                  -> obj.models.toJson,
-          "relations"               -> obj.relations.toJson,
-          "enums"                   -> obj.enums.toJson,
-          "actions"                 -> obj.actions.toJson,
-          "permanentAuthTokens"     -> obj.rootTokens.toJson,
-          "integrations"            -> obj.integrations.toJson,
-          "seats"                   -> obj.seats.toJson,
-          "allowQueries"            -> obj.allowQueries.toJson,
-          "allowMutations"          -> obj.allowMutations.toJson,
-          "packageDefinitions"      -> obj.packageDefinitions.toJson,
-          "functions"               -> obj.functions.toJson,
-          "featureToggles"          -> obj.featureToggles.toJson,
-          "typePositions"           -> obj.typePositions.toJson,
-          "isEjected"               -> JsBoolean(obj.isEjected),
-          "hasGlobalStarPermission" -> JsBoolean(obj.hasGlobalStarPermission)
+          "id"                              -> JsString(obj.id),
+          "name"                            -> JsString(obj.name),
+          "projectDatabase"                 -> obj.projectDatabase.toJson,
+          "ownerId"                         -> obj.ownerId.toJson,
+          "alias"                           -> obj.alias.toJson,
+          "revision"                        -> obj.revision.toJson,
+          "webhookUrl"                      -> obj.webhookUrl.toJson,
+          "models"                          -> obj.models.toJson,
+          "relations"                       -> obj.relations.toJson,
+          "enums"                           -> obj.enums.toJson,
+          "actions"                         -> obj.actions.toJson,
+          "permanentAuthTokens"             -> obj.rootTokens.toJson,
+          "integrations"                    -> obj.integrations.toJson,
+          "seats"                           -> obj.seats.toJson,
+          "allowQueries"                    -> obj.allowQueries.toJson,
+          "allowMutations"                  -> obj.allowMutations.toJson,
+          "packageDefinitions"              -> obj.packageDefinitions.toJson,
+          "functions"                       -> obj.functions.toJson,
+          "featureToggles"                  -> obj.featureToggles.toJson,
+          "typePositions"                   -> obj.typePositions.toJson,
+          "isEjected"                       -> JsBoolean(obj.isEjected),
+          "hasGlobalStarPermission"         -> JsBoolean(obj.hasGlobalStarPermission),
+          "activeFunctionDeploymentAccount" -> obj.activeFunctionDeploymentAccount.toJson,
+          "nextFunctionDeploymentAccount"   -> obj.nextFunctionDeploymentAccount.toJson
         )
       }
 
@@ -521,7 +523,9 @@ object SchemaSerializer {
             featureToggles = f("featureToggles").convertTo[List[FeatureToggle]],
             typePositions = f("typePositions").convertTo[List[String]],
             isEjected = f("isEjected").convertTo[Boolean],
-            hasGlobalStarPermission = f("hasGlobalStarPermission").convertTo[Boolean]
+            hasGlobalStarPermission = f("hasGlobalStarPermission").convertTo[Boolean],
+            activeFunctionDeploymentAccount = f("activeFunctionDeploymentAccount").convertTo[Option[String]],
+            nextFunctionDeploymentAccount = f("nextFunctionDeploymentAccount").convertTo[Option[String]]
           )
         } catch {
           case e: Throwable => sys.error("Couldn't parse Project: " + e.getMessage)

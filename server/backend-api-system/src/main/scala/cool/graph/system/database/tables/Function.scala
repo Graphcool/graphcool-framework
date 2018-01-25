@@ -21,7 +21,6 @@ case class Function(
     serversideSubscriptionQuery: Option[String],
     serversideSubscriptionQueryFilePath: Option[String],
     lambdaArn: Option[String],
-    deploymentAccountId: Option[String],
     webhookUrl: Option[String],
     webhookHeaders: Option[String],
     inlineCode: Option[String],
@@ -48,7 +47,6 @@ class FunctionTable(tag: Tag) extends Table[Function](tag, "Function") {
   def serversideSubscriptionQuery: Rep[Option[String]]                        = column[Option[String]]("serversideSubscriptionQuery")
   def serversideSubscriptionQueryFilePath: Rep[Option[String]]                = column[Option[String]]("serversideSubscriptionQueryFilePath")
   def lambdaArn: Rep[Option[String]]                                          = column[Option[String]]("lambdaArn")
-  def deploymentAccountId: Rep[Option[String]]                                = column[Option[String]]("deploymentAccountId")
   def webhookUrl: Rep[Option[String]]                                         = column[Option[String]]("webhookUrl")
   def webhookHeaders: Rep[Option[String]]                                     = column[Option[String]]("webhookHeaders")
   def inlineCode: Rep[Option[String]]                                         = column[Option[String]]("inlineCode")

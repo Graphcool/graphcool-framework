@@ -88,9 +88,8 @@ case class SystemUserContext(
       case None           => client.map(_.id)
     }) match {
       case Some(clientId) =>
-        Await.result(SystemUserContext
-                       .fetchClient(clientId, requestId, log = log),
-                     Duration(5, TimeUnit.SECONDS))
+        Await.result(SystemUserContext.fetchClient(clientId, requestId, log = log), Duration(5, TimeUnit.SECONDS))
+
       case None =>
         throw new Exception(
           "Don't call refresh when client is None. Currently the UserContext is used both when there is a client and when there isn't. We should refactor that")
@@ -99,7 +98,6 @@ case class SystemUserContext(
 }
 
 object SystemUserContext {
-
   def fetchClient(clientId: String, requestId: String, log: scala.Predef.Function[String, Unit])(implicit inj: SystemInjector,
                                                                                                  clientResolver: ClientResolver): Future[SystemUserContext] = {
     clientResolver.resolve(clientId = clientId) map {

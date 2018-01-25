@@ -1,10 +1,8 @@
 package cool.graph.system.schema.fields
 
-import cool.graph.system.mutations.{MigrateSchemaInput, PushInput}
+import cool.graph.system.mutations.GetTemporaryDeployUrlInput
 import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 import sangria.schema._
-
-case class GetTemporaryDeployUrlInput(projectId: String)
 
 object GetTemporaryDeploymentUrl {
   val inputFields = List(

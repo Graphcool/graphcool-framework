@@ -30,7 +30,9 @@ object ModelToDbMapper {
       typePositions = project.typePositions,
       projectDatabaseId = project.projectDatabase.id,
       isEjected = project.isEjected,
-      hasGlobalStarPermission = project.hasGlobalStarPermission
+      hasGlobalStarPermission = project.hasGlobalStarPermission,
+      activeFunctionDeploymentAccount = project.activeFunctionDeploymentAccount,
+      nextFunctionDeploymentAccount = project.nextFunctionDeploymentAccount
     )
   }
 
@@ -60,7 +62,6 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = Some(query),
           serversideSubscriptionQueryFilePath = queryFilePath,
           lambdaArn = None,
-          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -84,7 +85,6 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = None,
           serversideSubscriptionQueryFilePath = None,
           lambdaArn = None,
-          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -108,7 +108,6 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = None,
           serversideSubscriptionQueryFilePath = None,
           lambdaArn = None,
-          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -132,7 +131,6 @@ object ModelToDbMapper {
           serversideSubscriptionQuery = None,
           serversideSubscriptionQueryFilePath = None,
           lambdaArn = None,
-          deploymentAccountId = None,
           webhookUrl = None,
           webhookHeaders = None,
           inlineCode = None,
@@ -168,8 +166,7 @@ object ModelToDbMapper {
       case fn: ManagedFunction =>
         dbFunction.copy(
           functionType = FunctionType.CODE,
-          inlineCodeFilePath = fn.codeFilePath,
-          deploymentAccountId = fn.deploymentAccountId
+          inlineCodeFilePath = fn.codeFilePath
         )
 
 //      case fn: LambdaFunction =>
