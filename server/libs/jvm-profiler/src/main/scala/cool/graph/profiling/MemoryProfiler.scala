@@ -29,6 +29,7 @@ case class MemoryProfiler(metricsManager: MetricsManager) {
     heapMemoryMetrics.record(memoryMxBean.getHeapMemoryUsage)
     offHeapMemoryMetrics.record(memoryMxBean.getNonHeapMemoryUsage)
     garbageCollectionMetrics.foreach(_.record)
+    allocationMetrics.record()
   }
 }
 
