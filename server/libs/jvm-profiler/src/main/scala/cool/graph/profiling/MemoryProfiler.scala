@@ -33,6 +33,7 @@ case class MemoryProfiler(metricsManager: MetricsManager) {
 }
 
 case class AllocationMetrics(metricsManager: MetricsManager, mxBean: Option[ThreadMXBean]) {
+  // docs for the bean: https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/ThreadMXBean.html#getThreadAllocatedBytes(long)
 
   val allocationRate = metricsManager.defineCounter("memoryAllocationRateInKb")
 
@@ -45,18 +46,33 @@ case class AllocationMetrics(metricsManager: MetricsManager, mxBean: Option[Thre
     case Success(x) => x
     case Failure(_) => false
   }
+  println(s"MemoryAllocationMetrics are enabled: $isThreadAllocatedMemoryEnabled")
+
+  var lastAllocatedBytes = Map.empty[Long, Long] // thread id to allocated kilobytes
 
   def record(): Unit = {
-    mxBean.foreach { mxBean =>
-      if (isThreadAllocatedMemoryEnabled) {
-        val ids         = mxBean.getAllThreadIds
-        val allocations = mxBean.getThreadAllocatedBytes(ids)
-        allocations.foreach { allocation =>
-          val inKiloBytes = allocation / 1024
-          allocationRate.incBy(inKiloBytes)
-        }
+    if (isThreadAllocatedMemoryEnabled) {
+      mxBean.foreach { mxBean =>
+        recordAllocatedBytes(mxBean)
       }
     }
+  }
+
+  def recordAllocatedBytes(mxBean: ThreadMXBean): Unit = {
+    val newLastAllocatedBytes = mxBean.getAllThreadIds.map { id =>
+      val bytes       = mxBean.getThreadAllocatedBytes(id)
+      val inKiloBytes = if (bytes > 0) bytes / 1024 else 0
+      id -> inKiloBytes
+    }.toMap
+
+    newLastAllocatedBytes.foreach {
+      case (id, bytes: Long) =>
+        val lastBytes: Long = lastAllocatedBytes.getOrElse(id, 0)
+        val delta           = bytes - lastBytes
+        allocationRate.incBy(delta)
+    }
+    lastAllocatedBytes = newLastAllocatedBytes
+
   }
 }
 
