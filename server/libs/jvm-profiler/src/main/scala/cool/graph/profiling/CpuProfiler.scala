@@ -15,12 +15,12 @@ case class CpuProfiler(metricsManager: MetricsManager) {
       None
   }
 
-  val processCpuLoad = metricsManager.defineGauge("processCpuLoadPercentage")
-  val systemCpuLoad  = metricsManager.defineGauge("systemCpuLoadPercentage")
+//  val processCpuLoad = metricsManager.defineGauge("processCpuLoadPercentage")
+  val systemCpuLoad = metricsManager.defineGauge("systemCpuLoadPercentage")
 
   def profile(): Unit = {
     mxBean.foreach { mxBean =>
-      processCpuLoad.set(convertToPercent(mxBean.getProcessCpuLoad))
+//      processCpuLoad.set(convertToPercent(mxBean.getProcessCpuLoad))
       systemCpuLoad.set(convertToPercent(mxBean.getSystemCpuLoad))
     }
   }
