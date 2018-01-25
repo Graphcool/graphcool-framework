@@ -1,11 +1,11 @@
 package cool.graph.shared.functions
 
 import cool.graph.shared.models.Project
-
 import scala.concurrent.Future
 
 trait FunctionEnvironment {
-  def getTemporaryUploadUrl(project: Project): Future[String]
+  def pickDeploymentAccount(): Option[String]
+  def getTemporaryUploadUrl(project: Project): String
   def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse]
   def invoke(project: Project, name: String, event: String): Future[InvokeResponse]
 }

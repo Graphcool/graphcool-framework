@@ -19,11 +19,12 @@ import cool.graph.messagebus.queue.rabbit.RabbitQueue
 import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
-import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
+import cool.graph.shared.functions.lambda.{LambdaDeploymentAccount, LambdaFunctionEnvironment}
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, GraphcoolEndpointResolver}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
+import play.api.libs.json.Json
 import scaldi.Module
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -73,7 +74,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val rabbitMQUri: String                          = sys.env("RABBITMQ_URI")
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
-  lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
+  lazy val endpointResolver: EndpointResolver           = GraphcoolEndpointResolver()
   lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
@@ -103,8 +104,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   )
 
   lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+    parseLambdaAccounts(sys.env.getOrElse("LAMBDA_ACCOUNTS", sys.error("Env var LAMBDA_ACCOUNTS required but not found")))
   )
 
   lazy val kinesis: AmazonKinesis = {
@@ -128,7 +128,6 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   )
 
   implicit lazy val injector: ClientInjector = this
-
   implicit lazy val toScaldi: Module = {
     val outer = this
     new Module {
@@ -161,10 +160,14 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       binding identifiedBy "service-name" toNonLazy outer.environment
     }
   }
+
+  def parseLambdaAccounts(raw: String): Vector[LambdaDeploymentAccount] = {
+    import LambdaDeploymentAccount._
+    Json.parse(raw).as[Vector[LambdaDeploymentAccount]]
+  }
 }
 
 class FileUploadInjector(implicit system: ActorSystem, materializer: ActorMaterializer) extends ClientInjectorImpl {
-
   override lazy val s3Fileupload: AmazonS3                          = createS3Fileupload()
   override lazy val projectSchemaFetcher: RefreshableProjectFetcher = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
 

@@ -4,6 +4,7 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.adapters.HttpFunctionHeaders
 import cool.graph.shared.database.InternalAndProjectDbs
 import cool.graph.shared.errors.UserInputErrors
+import cool.graph.shared.functions.FunctionEnvironment
 import cool.graph.shared.models
 import cool.graph.shared.models.FunctionBinding.FunctionBinding
 import cool.graph.shared.models.FunctionType.FunctionType
@@ -14,14 +15,18 @@ import cool.graph.system.mutactions.internal.validations.URLValidation
 import cool.graph.system.mutactions.internal.{BumpProjectRevision, CreateFunction, InvalidateSchema}
 import cool.graph.{InternalProjectMutation, Mutaction}
 import sangria.relay.Mutation
-import scaldi.Injector
+import scaldi.{Injectable, Injector}
 
-case class AddRequestPipelineMutationFunctionMutation(client: models.Client,
-                                                      project: models.Project,
-                                                      args: AddRequestPipelineMutationFunctionInput,
-                                                      projectDbsFn: models.Project => InternalAndProjectDbs)(implicit inj: Injector)
-    extends InternalProjectMutation[AddRequestPipelineMutationFunctionMutationPayload] {
+case class AddRequestPipelineMutationFunctionMutation(
+    client: models.Client,
+    project: models.Project,
+    args: AddRequestPipelineMutationFunctionInput,
+    projectDbsFn: models.Project => InternalAndProjectDbs
+)(implicit inj: Injector)
+    extends InternalProjectMutation[AddRequestPipelineMutationFunctionMutationPayload]
+    with Injectable {
 
+  val functionRuntime = inject[FunctionEnvironment]
   val newDelivery: FunctionDelivery = args.functionType match {
     case FunctionType.WEBHOOK =>
       WebhookFunction(url = URLValidation.getAndValidateURL(args.name, args.webhookUrl), headers = HttpFunctionHeaders.read(args.headers))
@@ -36,7 +41,7 @@ case class AddRequestPipelineMutationFunctionMutation(client: models.Client,
       )
 
     case FunctionType.CODE if args.inlineCode.isEmpty =>
-      ManagedFunction(args.codeFilePath)
+      ManagedFunction(codeFilePath = args.codeFilePath)
   }
 
   val newFunction = RequestPipelineFunction(
@@ -49,7 +54,14 @@ case class AddRequestPipelineMutationFunctionMutation(client: models.Client,
     delivery = newDelivery
   )
 
-  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction)
+  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction, nextFunctionDeploymentAccount = nextActiveDeploymentAccount())
+
+  private def nextActiveDeploymentAccount(): Option[String] = {
+    project.nextFunctionDeploymentAccount match {
+      case x @ Some(_) => x
+      case None        => functionRuntime.pickDeploymentAccount()
+    }
+  }
 
   override def prepareActions(): List[Mutaction] = {
 

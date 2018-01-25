@@ -3,20 +3,25 @@ package cool.graph.system.mutations
 import cool.graph.cuid.Cuid
 import cool.graph.shared.adapters.HttpFunctionHeaders
 import cool.graph.shared.database.InternalAndProjectDbs
+import cool.graph.shared.functions.FunctionEnvironment
 import cool.graph.shared.models
 import cool.graph.shared.models.FunctionType.FunctionType
 import cool.graph.shared.models._
 import cool.graph.system.mutactions.internal.{BumpProjectRevision, CreateFunction, InvalidateSchema}
 import cool.graph.{InternalProjectMutation, Mutaction}
 import sangria.relay.Mutation
-import scaldi.Injector
+import scaldi.{Injectable, Injector}
 
-case class AddSchemaExtensionFunctionMutation(client: models.Client,
-                                              project: models.Project,
-                                              args: AddSchemaExtensionFunctionInput,
-                                              projectDbsFn: models.Project => InternalAndProjectDbs)(implicit inj: Injector)
-    extends InternalProjectMutation[AddSchemaExtensionFunctionMutationPayload] {
+case class AddSchemaExtensionFunctionMutation(
+    client: models.Client,
+    project: models.Project,
+    args: AddSchemaExtensionFunctionInput,
+    projectDbsFn: models.Project => InternalAndProjectDbs
+)(implicit inj: Injector)
+    extends InternalProjectMutation[AddSchemaExtensionFunctionMutationPayload]
+    with Injectable {
 
+  val functionRuntime = inject[FunctionEnvironment]
   val newDelivery: FunctionDelivery = args.functionType match {
     case FunctionType.WEBHOOK =>
       WebhookFunction(url = args.url.get.trim, headers = HttpFunctionHeaders.read(args.headers))
@@ -31,7 +36,7 @@ case class AddSchemaExtensionFunctionMutation(client: models.Client,
       )
 
     case FunctionType.CODE if args.inlineCode.isEmpty =>
-      ManagedFunction(args.codeFilePath)
+      ManagedFunction(codeFilePath = args.codeFilePath)
   }
 
   val newFunction: SchemaExtensionFunction = SchemaExtensionFunction.createFunction(
@@ -43,7 +48,14 @@ case class AddSchemaExtensionFunctionMutation(client: models.Client,
     schemaFilePath = args.schemaFilePath
   )
 
-  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction)
+  val updatedProject: Project = project.copy(functions = project.functions :+ newFunction, nextFunctionDeploymentAccount = nextActiveDeploymentAccount())
+
+  private def nextActiveDeploymentAccount(): Option[String] = {
+    project.nextFunctionDeploymentAccount match {
+      case x @ Some(_) => x
+      case None        => functionRuntime.pickDeploymentAccount()
+    }
+  }
 
   override def prepareActions(): List[Mutaction] = {
     this.actions = List(CreateFunction(project, newFunction), BumpProjectRevision(project = project), InvalidateSchema(project))

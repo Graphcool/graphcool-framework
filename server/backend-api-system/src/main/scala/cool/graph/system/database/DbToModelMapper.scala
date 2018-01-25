@@ -109,7 +109,7 @@ object DbToModelMapper {
 
   def createFunctionList(allData: AllDataForProject): Seq[models.Function] = {
     allData.functions
-      .map { function =>
+      .map { function: Function =>
         val delivery = function.functionType match {
           case models.FunctionType.CODE if function.inlineCode.nonEmpty =>
             models.Auth0Function(
@@ -122,6 +122,7 @@ object DbToModelMapper {
 
           case models.FunctionType.CODE if function.inlineCode.isEmpty =>
             models.ManagedFunction()
+
 //          case models.FunctionType.LAMBDA =>
 //            models.LambdaFunction(
 //              code = function.inlineCode.get,

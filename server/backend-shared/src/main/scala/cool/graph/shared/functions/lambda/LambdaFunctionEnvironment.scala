@@ -5,16 +5,10 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.{CompletableFuture, CompletionException}
 
 import com.amazonaws.HttpMethod
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import cool.graph.cuid.Cuid
 import cool.graph.shared.functions._
 import cool.graph.shared.models.Project
-import software.amazon.awssdk.auth.{AwsCredentials, StaticCredentialsProvider}
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.lambda.LambdaAsyncClient
 import software.amazon.awssdk.services.lambda.model.{
   CreateFunctionRequest,
   FunctionCode,
@@ -32,6 +26,7 @@ import spray.json.{JsArray, JsObject, JsString}
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Random
 import scalaj.http.Base64
 
 object LambdaFunctionEnvironment {
@@ -55,65 +50,41 @@ object LambdaFunctionEnvironment {
   }
 }
 
-case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: String) extends FunctionEnvironment {
-  val lambdaCredentials = new StaticCredentialsProvider(new AwsCredentials(accessKeyId, secretAccessKey))
+case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) extends FunctionEnvironment {
+  private val idsToAccounts = accounts.map(a => a.id -> a).toMap
+  private def accountForId(accountId: Option[String]): LambdaDeploymentAccount =
+    idsToAccounts.getOrElse(accountId.getOrElse("default"), sys.error(s"Account $accountId not configured."))
 
-  def lambdaClient(project: Project): LambdaAsyncClient =
-    LambdaAsyncClient
-      .builder()
-      .region(awsRegion(project))
-      .credentialsProvider(lambdaCredentials)
-      .build()
-
-  val s3Credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey)
-
-  def s3Client(project: Project) = {
-    val region = awsRegion(project).toString
-
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(s3Credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(s"s3-$region.amazonaws.com", region))
-      .build
+  // Picks a random account for new function deployments, ignoring disabled account
+  override def pickDeploymentAccount(): Option[String] = {
+    Random.shuffle(accounts.filter(_.deploymentEnabled)).headOption.map(_.id)
   }
 
-  val deployBuckets = Map(
-    cool.graph.shared.models.Region.EU_WEST_1      -> "graphcool-lambda-deploy-eu-west-1",
-    cool.graph.shared.models.Region.US_WEST_2      -> "graphcool-lambda-deploy-us-west-2",
-    cool.graph.shared.models.Region.AP_NORTHEAST_1 -> "graphcool-lambda-deploy-ap-northeast-1"
-  )
-
-  def awsRegion(project: Project) = project.region match {
-    case cool.graph.shared.models.Region.EU_WEST_1      => Region.EU_WEST_1
-    case cool.graph.shared.models.Region.US_WEST_2      => Region.US_WEST_2
-    case cool.graph.shared.models.Region.AP_NORTHEAST_1 => Region.AP_NORTHEAST_1
-    case _                                              => Region.EU_WEST_1
-  }
-
-  def getTemporaryUploadUrl(project: Project): Future[String] = {
-    val expiration     = new java.util.Date()
-    val oneHourFromNow = expiration.getTime + 1000 * 60 * 60
+  def getTemporaryUploadUrl(project: Project): String = {
+    val account                     = accountForId(project.nextFunctionDeploymentAccount)
+    val expiration                  = new java.util.Date()
+    val oneHourFromNow              = expiration.getTime + 1000 * 60 * 60
+    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(account.bucket(project), Cuid.createCuid())
 
     expiration.setTime(oneHourFromNow)
-
-    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(deployBuckets(project.region), Cuid.createCuid())
-
     generatePresignedUrlRequest.setMethod(HttpMethod.PUT)
     generatePresignedUrlRequest.setExpiration(expiration)
-
-    Future.successful(s3Client(project).generatePresignedUrl(generatePresignedUrlRequest).toString)
+    account.s3Client(project).generatePresignedUrl(generatePresignedUrlRequest).toString
   }
 
   def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
-    val key = externalFile.url.split("\\?").head.split("/").last
+    val key     = externalFile.url.split("\\?").head.split("/").last
+    val account = accountForId(project.nextFunctionDeploymentAccount)
 
     def create =
-      lambdaClient(project)
+      account
+        .lambdaClient(project)
         .createFunction(
           CreateFunctionRequest.builder
-            .code(FunctionCode.builder().s3Bucket(deployBuckets(project.region)).s3Key(key).build())
+            .code(FunctionCode.builder().s3Bucket(account.bucket(project)).s3Key(key).build())
             .functionName(lambdaFunctionName(project, name))
             .handler(externalFile.lambdaHandler)
-            .role("arn:aws:iam::484631947980:role/service-role/defaultLambdaFunctionRole")
+            .role(account.deployIamArn)
             .timeout(15)
             .memorySize(512)
             .runtime(Runtime.Nodejs610)
@@ -121,23 +92,29 @@ case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: Strin
         .toScala
         .map(_ => DeploySuccess())
 
+    //CodeStorageExceededException
+
     def update = {
-      val updateCode: CompletableFuture[UpdateFunctionCodeResponse] = lambdaClient(project)
+      val updateCode: CompletableFuture[UpdateFunctionCodeResponse] = account
+        .lambdaClient(project)
         .updateFunctionCode(
           UpdateFunctionCodeRequest.builder
-            .s3Bucket(deployBuckets(project.region))
+            .s3Bucket(account.bucket(project))
             .s3Key(key)
             .functionName(lambdaFunctionName(project, name))
             .build()
         )
 
-      lazy val updateConfiguration = lambdaClient(project)
+      lazy val updateConfiguration = account
+        .lambdaClient(project)
         .updateFunctionConfiguration(
           UpdateFunctionConfigurationRequest.builder
             .functionName(lambdaFunctionName(project, name))
             .handler(externalFile.lambdaHandler)
             .build()
         )
+
+      // todo catch
 
       for {
         _ <- updateCode.toScala
@@ -152,7 +129,10 @@ case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: Strin
   }
 
   def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
-    lambdaClient(project)
+    val account = accountForId(project.nextFunctionDeploymentAccount)
+
+    account
+      .lambdaClient(project)
       .invoke(
         InvokeRequest.builder
           .functionName(lambdaFunctionName(project, name))
@@ -168,7 +148,6 @@ case class LambdaFunctionEnvironment(accessKeyId: String, secretAccessKey: Strin
           val logMessage                 = Base64.decodeString(response.logResult())
           val logLines                   = LambdaFunctionEnvironment.parseLambdaLogs(logMessage)
           val returnValueWithLogEnvelope = s"""{"logs":${JsArray(logLines).compactPrint}, "response": $returnValue}"""
-
           InvokeSuccess(returnValue = returnValueWithLogEnvelope)
         } else {
           InvokeFailure(sys.error(s"statusCode was ${response.statusCode()}"))

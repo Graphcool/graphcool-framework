@@ -30,7 +30,9 @@ object ModelToDbMapper {
       typePositions = project.typePositions,
       projectDatabaseId = project.projectDatabase.id,
       isEjected = project.isEjected,
-      hasGlobalStarPermission = project.hasGlobalStarPermission
+      hasGlobalStarPermission = project.hasGlobalStarPermission,
+      activeFunctionDeploymentAccount = project.activeFunctionDeploymentAccount,
+      nextFunctionDeploymentAccount = project.nextFunctionDeploymentAccount
     )
   }
 
@@ -150,6 +152,7 @@ object ModelToDbMapper {
           webhookUrl = Some(fn.url),
           webhookHeaders = Some(HttpFunctionHeaders.write(fn.headers).toString)
         )
+
       case fn: Auth0Function =>
         dbFunction.copy(
           functionType = FunctionType.CODE,
@@ -159,11 +162,13 @@ object ModelToDbMapper {
           inlineCode = Some(fn.code),
           inlineCodeFilePath = fn.codeFilePath
         )
+
       case fn: ManagedFunction =>
         dbFunction.copy(
           functionType = FunctionType.CODE,
           inlineCodeFilePath = fn.codeFilePath
         )
+
 //      case fn: LambdaFunction =>
 //        dbFunction.copy(
 //          functionType = FunctionType.LAMBDA,

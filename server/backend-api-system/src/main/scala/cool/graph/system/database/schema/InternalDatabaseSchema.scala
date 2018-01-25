@@ -66,6 +66,8 @@ object InternalDatabaseSchema {
         `projectDatabaseId` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'eu-west-1-legacy',
         `isEjected` tinyint(1) NOT NULL DEFAULT '0',
         `hasGlobalStarPermission` tinyint(1) NOT NULL DEFAULT '0',
+        `activeFunctionDeploymentAccount` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+        `nextFunctionDeploymentAccount` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`),
         UNIQUE KEY `project_clientid_projectname_uniq` (`clientId`,`name`),
         UNIQUE KEY `project_alias_uniq` (`alias`),

@@ -18,8 +18,8 @@ import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPu
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices._
-import cool.graph.shared.functions.LiveEndpointResolver
-import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
+import cool.graph.shared.functions.{FunctionEnvironment, GraphcoolEndpointResolver}
+import cool.graph.shared.functions.lambda.{LambdaDeploymentAccount, LambdaFunctionEnvironment}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -28,6 +28,7 @@ import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCallerImplementation}
+import play.api.libs.json.Json
 import scaldi._
 
 import scala.concurrent.ExecutionContext
@@ -96,9 +97,8 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
 
   lazy val blockedProjectIds: Vector[String] = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
 
-  override lazy val functionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
+    parseLambdaAccounts(sys.env.getOrElse("LAMBDA_ACCOUNTS", sys.error("Env var LAMBDA_ACCOUNTS required but not found")))
   )
 
   override implicit lazy val dispatcher: ExecutionContext = system.dispatcher
@@ -128,7 +128,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   )
 
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
-  lazy val endpointResolver                             = LiveEndpointResolver()
+  lazy val endpointResolver                             = GraphcoolEndpointResolver()
   lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherMock
@@ -169,4 +169,8 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val maxImportExportSize: Int                     = 10000000
 
+  def parseLambdaAccounts(raw: String): Vector[LambdaDeploymentAccount] = {
+    import LambdaDeploymentAccount._
+    Json.parse(raw).as[Vector[LambdaDeploymentAccount]]
+  }
 }

@@ -17,15 +17,17 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
 
   private val httpClient = SimpleHttpClient()
 
+  override def pickDeploymentAccount(): Option[String] = None
+
   val functionEndpointInternal: String =
     sys.env.getOrElse("FUNCTION_ENDPOINT_INTERNAL", sys.error("FUNCTION_ENDPOINT_INTERNAL env var required for dev function deployment.")).stripSuffix("/")
 
   val functionEndpointExternal: String =
     sys.env.getOrElse("FUNCTION_ENDPOINT_EXTERNAL", sys.error("FUNCTION_ENDPOINT_EXTERNAL env var required for dev function deployment.")).stripSuffix("/")
 
-  override def getTemporaryUploadUrl(project: Project): Future[String] = {
+  override def getTemporaryUploadUrl(project: Project): String = {
     val deployId = Cuid.createCuid()
-    Future.successful(s"$functionEndpointExternal/functions/files/${project.id}/$deployId")
+    s"$functionEndpointExternal/functions/files/${project.id}/$deployId"
   }
 
   override def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {

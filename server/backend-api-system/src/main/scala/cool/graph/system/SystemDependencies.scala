@@ -14,13 +14,14 @@ import cool.graph.messagebus.{Conversions, PubSubPublisher}
 import cool.graph.shared.database.{GlobalDatabaseManager, InternalDatabase}
 import cool.graph.shared.externalServices._
 import cool.graph.shared.functions.FunctionEnvironment
-import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
+import cool.graph.shared.functions.lambda.{LambdaDeploymentAccount, LambdaFunctionEnvironment}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.system.database.Initializers
 import cool.graph.system.database.finder.client.ClientResolver
 import cool.graph.system.database.finder.{CachedProjectResolver, CachedProjectResolverImpl, ProjectQueries, UncachedProjectResolver}
 import cool.graph.system.externalServices._
 import cool.graph.system.metrics.SystemMetrics
+import play.api.libs.json.Json
 import scaldi.Module
 import slick.jdbc
 import slick.jdbc.MySQLProfile
@@ -94,9 +95,8 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
 
   lazy val invalidationPublisher: RabbitAkkaPubSubPublisher[String] =
     RabbitAkkaPubSub.publisher[String](globalRabbitUri, "project-schema-invalidation", durable = true)
-  lazy val functionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
+    parseLambdaAccounts(sys.env.getOrElse("LAMBDA_ACCOUNTS", sys.error("Env var LAMBDA_ACCOUNTS required but not found")))
   )
 
   val dbs: Seq[jdbc.MySQLProfile.backend.DatabaseDef] = {
@@ -111,6 +111,11 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
         println(s"Unable to initialize databases: $e")
         sys.exit(-1)
     }
+  }
+
+  def parseLambdaAccounts(raw: String): Vector[LambdaDeploymentAccount] = {
+    import LambdaDeploymentAccount._
+    Json.parse(raw).as[Vector[LambdaDeploymentAccount]]
   }
 
   implicit lazy val toScaldi: Module = {
@@ -230,9 +235,8 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
 
-  lazy val functionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
+    parseLambdaAccounts(sys.env.getOrElse("LAMBDA_ACCOUNTS", sys.error("Env var LAMBDA_ACCOUNTS required but not found")))
   )
 
   bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy invalidationPublisher
@@ -248,4 +252,9 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver
+
+  def parseLambdaAccounts(raw: String): Vector[LambdaDeploymentAccount] = {
+    import LambdaDeploymentAccount._
+    Json.parse(raw).as[Vector[LambdaDeploymentAccount]]
+  }
 }
