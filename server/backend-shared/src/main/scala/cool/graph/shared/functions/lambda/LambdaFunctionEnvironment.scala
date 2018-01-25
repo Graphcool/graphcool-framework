@@ -12,23 +12,13 @@ import cool.graph.shared.models.Project
 import software.amazon.awssdk.auth.{AwsCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.lambda.LambdaAsyncClient
-import software.amazon.awssdk.services.lambda.model.{
-  CreateFunctionRequest,
-  FunctionCode,
-  InvocationType,
-  InvokeRequest,
-  LogType,
-  ResourceConflictException,
-  Runtime,
-  UpdateFunctionCodeRequest,
-  UpdateFunctionCodeResponse,
-  UpdateFunctionConfigurationRequest
-}
+import software.amazon.awssdk.services.lambda.model.{CreateFunctionRequest, FunctionCode, InvocationType, InvokeRequest, LogType, ResourceConflictException, Runtime, UpdateFunctionCodeRequest, UpdateFunctionCodeResponse, UpdateFunctionConfigurationRequest}
 import spray.json.{JsArray, JsObject, JsString}
 
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Random
 import scalaj.http.Base64
 
 object LambdaFunctionEnvironment {
@@ -61,7 +51,7 @@ case class LambdaDeploymentAccount(id: String,
   lazy val credentialsProvider = new StaticCredentialsProvider(new AwsCredentials(accessKeyID, accessKey))
 
   def bucket(region: String): String = {
-    ???
+    deploymentBuckets.find(_.region == region).getOrElse(sys.error("Region is not supported for lambda deployment")).deploymentBucket
   }
 
   def lambdaClient(project: Project): LambdaAsyncClient =
@@ -82,20 +72,27 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
 //    case _                                              => Region.EU_WEST_1
 //  }
 
+  private val idsToAccounts = accounts.map(a => a.id -> a).toMap
+  private def accountForId(accountId: String): LambdaDeploymentAccount = idsToAccounts.getOrElse(accountId, sys.error(s"Account $accountId not configured."))
+
   // Picks a random account for new function deployments
   // todo how to handle function updates?
   override def pickDeploymentAccount(): Option[String] = {
-    // todo pick random account
-    ???
+    Random.shuffle(accounts.filter(_.id == "default")).headOption.map(_.id)
   }
 
   def getTemporaryUploadUrl(project: Project, deploymentAccountId: Option[String]): Future[String] = {
+    val account = deploymentAccountId match {
+      case Some(id) => idsToAccounts.getOrElse(id, sys.error(s"Account $deploymentAccountId not configured."))
+      case None => idsToAccounts("default")
+    }
+
     val expiration     = new java.util.Date()
     val oneHourFromNow = expiration.getTime + 1000 * 60 * 60
 
     expiration.setTime(oneHourFromNow)
 
-    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketResolver.bucketNameForProject(project), Cuid.createCuid())
+    val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(accounts., Cuid.createCuid())
 
     generatePresignedUrlRequest.setMethod(HttpMethod.PUT)
     generatePresignedUrlRequest.setExpiration(expiration)
