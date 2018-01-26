@@ -27,7 +27,10 @@ case class LambdaDeploymentAccount(
 
   def bucket(project: Project): String = {
     val region = getRegion(project.region.toString)
-    deploymentBuckets.find(_.region == region).getOrElse(sys.error("Region is not supported for lambda deployment")).deploymentBucket
+    println(s"[.bucket] Region for project ${project.id}: $region")
+    val bucket = deploymentBuckets.find(_.region == region).getOrElse(sys.error("Region is not supported for lambda deployment")).deploymentBucket
+    println(s"[.bucket] Bucket for project ${project.id}: $bucket")
+    bucket
   }
 
   def lambdaClient(project: Project): LambdaAsyncClient =
