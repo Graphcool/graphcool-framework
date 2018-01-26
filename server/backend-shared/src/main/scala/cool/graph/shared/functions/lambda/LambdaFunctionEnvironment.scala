@@ -61,8 +61,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   }
 
   def getTemporaryUploadUrl(project: Project): String = {
-    val account = accountForId(project.nextFunctionDeploymentAccount)
-    println(s"[.getTemporaryUploadUrl] Account for project ${project.id}: $account")
+    val account                     = accountForId(project.nextFunctionDeploymentAccount)
     val expiration                  = new java.util.Date()
     val oneHourFromNow              = expiration.getTime + 1000 * 60 * 60
     val generatePresignedUrlRequest = new GeneratePresignedUrlRequest(account.bucket(project), Cuid.createCuid())
@@ -74,11 +73,8 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   }
 
   def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
-    println(s"[.deploy] Deploying ${project.id} function from s3: $externalFile")
-    val key = externalFile.url.split("\\?").head.split("/").last
-    println(s"[.deploy] Deploying ${project.id} function from key: $key")
+    val key     = externalFile.url.split("\\?").head.split("/").last
     val account = accountForId(project.nextFunctionDeploymentAccount)
-    println(s"[.deploy] Account for project ${project.id}: $account")
 
     def create =
       account
@@ -130,7 +126,6 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
 
   def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
     val account = accountForId(project.activeFunctionDeploymentAccount)
-    println(s"[.invoke] Account for project ${project.id}: $account")
 
     account
       .lambdaClient(project)
