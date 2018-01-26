@@ -14,5 +14,6 @@ object BackendSharedMetrics extends MetricsManager {
       }
       .mkString
 
-  val sqlQueryTimer = defineTimer("sqlQueryTimer", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
+  val sqlQueryTimer   = defineTimer("sqlQueryTimer", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
+  val requestDuration = defineTimer("requestDuration", CustomTag("projectId", recordingThreshold = 1500))
 }

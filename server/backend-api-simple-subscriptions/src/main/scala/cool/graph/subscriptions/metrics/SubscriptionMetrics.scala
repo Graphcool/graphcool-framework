@@ -1,12 +1,12 @@
 package cool.graph.subscriptions.metrics
 
 import cool.graph.metrics.{CustomTag, MetricsManager}
-import cool.graph.profiling.MemoryProfiler
+import cool.graph.profiling.JvmProfiler
 
 object SubscriptionMetrics extends MetricsManager {
   override def serviceName = "SimpleSubscriptionService"
 
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 
   // Actor Counts
   val activeSubcriptionSessions                     = defineGauge("activeSubscriptionSessions")

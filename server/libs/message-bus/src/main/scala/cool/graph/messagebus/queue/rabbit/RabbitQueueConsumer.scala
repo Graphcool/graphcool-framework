@@ -82,7 +82,7 @@ case class RabbitQueueConsumer[T](
 
     if (info.exceededTries) {
       val now = System.currentTimeMillis() / 1000
-      exchange.publish(s"error.${info.tries}.$now", delivery.body)
+      //exchange.publish(s"error.${info.tries}.$now", delivery.body)
       regularQ.ack(delivery)
     } else if (info.isDelayed) {
       regularQ.nack(delivery, requeue = true)

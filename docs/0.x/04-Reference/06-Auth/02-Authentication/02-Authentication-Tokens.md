@@ -53,9 +53,9 @@ const fromEvent = require('graphcool-lib').fromEvent
 
 module.exports = event => {
 
-  const nodeId = ... // e.g. 
+  const nodeId = ...
 
-  const graphcool-framework = fromEvent(event)
+  const graphcool = fromEvent(event)
   const validityDuration = 864000 // 864000 seconds are 10 days
 
   // validityDuration is an optional argument, the default is 30 days 
