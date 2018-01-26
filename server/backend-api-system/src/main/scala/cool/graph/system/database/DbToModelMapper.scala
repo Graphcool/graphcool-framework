@@ -81,7 +81,9 @@ object DbToModelMapper {
       typePositions = project.typePositions.toList,
       projectDatabase = createProjectDatabase(allData.projectDatabase),
       isEjected = project.isEjected,
-      hasGlobalStarPermission = project.hasGlobalStarPermission
+      hasGlobalStarPermission = project.hasGlobalStarPermission,
+      activeFunctionDeploymentAccount = project.activeFunctionDeploymentAccount,
+      nextFunctionDeploymentAccount = project.nextFunctionDeploymentAccount
     )
   }
 

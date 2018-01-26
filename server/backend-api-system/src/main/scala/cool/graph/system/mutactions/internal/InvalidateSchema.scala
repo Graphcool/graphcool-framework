@@ -7,7 +7,6 @@ import cool.graph.shared.models.{Client, Project}
 import cool.graph.system.database.finder.CachedProjectResolver
 import cool.graph.system.database.tables.{SeatTable, Tables}
 import scaldi.{Injectable, Injector}
-import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.collection.immutable.Seq
@@ -32,7 +31,6 @@ object InvalidateSchema {
 }
 
 case class InvalidateSchema(projectId: String)(implicit inj: Injector) extends InvalidateSchemaBase {
-
   def projectIds: Future[Vector[String]] = Future.successful(Vector(projectId))
 }
 
@@ -55,7 +53,6 @@ case class InvalidateAllSchemas()(implicit inj: Injector) extends InvalidateSche
 }
 
 case class InvalidateSchemaForAllProjects(client: Client)(implicit inj: Injector) extends InvalidateSchemaBase {
-
   def projectIds: Future[Vector[String]] = {
     import slick.jdbc.MySQLProfile.api._
     import slick.lifted.TableQuery
