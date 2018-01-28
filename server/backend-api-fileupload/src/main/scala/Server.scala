@@ -12,7 +12,7 @@ import akka.stream.{ActorMaterializer, FlowShape}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types._
-import cool.graph.bugsnag.GraphCoolRequest
+import cool.graph.bugsnag.{BugSnaggerMock, GraphCoolRequest}
 import cool.graph.client._
 import cool.graph.client.database.DatabaseMutationBuilder
 import cool.graph.client.files.{FileUploadResponse, FileUploader}
@@ -24,6 +24,7 @@ import cool.graph.shared.logging.RequestLogger
 import cool.graph.shared.models.{AuthenticatedRequest, Project, ProjectWithClientId}
 import cool.graph.util.ErrorHandlerFactory
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
+
 import scala.collection.immutable._
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -114,8 +115,9 @@ object Server extends App with LazyLogging {
         val local = Flow[RequestAndSchema].mapAsyncUnordered(5)(x => {
           println("LOCAL")
 
-          val requestLogger = new RequestLogger(requestIdPrefix = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found.")) + ":file", log = log)
-          val requestId     = requestLogger.begin
+          val requestLogger =
+            new RequestLogger(requestIdPrefix = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found.")) + ":file", log = log)(BugSnaggerMock)
+          val requestId = requestLogger.begin
 
           Unmarshal(x.request.entity)
             .to[Multipart.FormData]
