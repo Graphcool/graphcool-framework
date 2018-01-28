@@ -57,7 +57,7 @@ The values in `cursor` describe the offsets in the database from where on data s
 Here is an example `curl` command for uploading some JSON data (of NDF type `nodes`):
 
 ```sh
-curl `http://localhost:60000/simple/v1/cjapb3w1d08jc0167wy2c7u2c/export` \
+curl 'http://localhost:60000/simple/v1/cjapb3w1d08jc0167wy2c7u2c/export' \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTM1OTQzMTEsImV4cCI6MTU0NTEzMDMxMSwiYXVkIjasd3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJFbWFpbCI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJSb2xlIjpbIk1hbmFnZXIiLCJQcm9qZWN0IEFkbWluaXN0cmF0b3IiXX0.L7DwH7vIfTSmuwfxBI82D64DlgoLBLXOwR5iMjZ_7nI' \
 -d '{"fileType":"nodes","cursor":{"table":0,"row":0,"field":0,"array":0}}' \
