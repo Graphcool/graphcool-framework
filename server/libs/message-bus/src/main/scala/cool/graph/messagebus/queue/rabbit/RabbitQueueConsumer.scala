@@ -142,7 +142,7 @@ case class RabbitQueueConsumer[T](
         case Failure(err) =>
           queue.ack(delivery)
           exchange.publish(s"msg.${info.tries + 1}", delivery.body)
-          bugSnagger.report(ProcessingFailedError(s"Processing in queue '${queue.name}' (payload '$payload') failed with error $err"))
+//          bugSnagger.report(ProcessingFailedError(s"Processing in queue '${queue.name}' (payload '$payload') failed with error $err"))
           println(err)
       })
     }
