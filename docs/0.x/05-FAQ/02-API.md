@@ -17,11 +17,11 @@ Every Graphcool service comes with two different GraphQL APIs. Note that both AP
 
 Graphcool conforms to the [GraphQL specification for error handling](https://facebook.github.io/graphql/#sec-Errors).
 
-If a requested fails, the JSON payload of the server's response will contain a root field called `errors` that contains precise information about the problems that occured on the server-side.
+If a request fails, the JSON payload of the server's response will contain a root field called `errors` that contains precise information about the problems that occured on the server-side.
 
 Since GraphQL allows for multiple operations to be sent in the same request, it's well possible that a request only _partially fails_ and returns actual data _and_ errors.
 
-> Notice that HTTP status codes are _not_ relevant when using GraphQL! A GraphQL server will always respond with code 200 (unless an internal server occured, then it might be code 500). Any further information needs to be parsed from the JSON payload of the response.
+> Notice that HTTP status codes are _not_ relevant when using GraphQL! A GraphQL server will always respond with code 200 (unless an internal server occured, then it might be a 500 error). Any further information needs to be parsed from the JSON payload of the response.
 
 
 ### Does Graphcool support realtime functionality?
