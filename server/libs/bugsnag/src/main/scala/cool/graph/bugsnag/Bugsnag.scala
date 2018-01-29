@@ -1,5 +1,7 @@
 package cool.graph.bugsnag
 
+import java.lang.Thread.UncaughtExceptionHandler
+
 import com.bugsnag.{Bugsnag => BugsnagClient}
 
 case class Request(method: String, uri: String, headers: Map[String, String])
@@ -17,11 +19,22 @@ trait BugSnagger {
 }
 
 case class BugSnaggerImpl(apiKey: String) extends BugSnagger {
-  val gitSha         = sys.env.get("COMMIT_SHA").getOrElse("commit sha not set")
-  val environment    = sys.env.get("ENVIRONMENT").getOrElse("environment not set")
-  val service        = sys.env.get("SERVICE_NAME").getOrElse("service not set")
-  val hostName       = java.net.InetAddress.getLocalHost.getHostName
-  private val client = new BugsnagClient(apiKey)
+  val gitSha      = sys.env.getOrElse("COMMIT_SHA", "commit sha not set")
+  val environment = sys.env.getOrElse("ENVIRONMENT", "environment not set")
+  val service     = sys.env.getOrElse("SERVICE_NAME", "service not set")
+  val region      = sys.env.getOrElse("AWS_REGION", "No region set")
+  val hostName    = java.net.InetAddress.getLocalHost.getHostName
+  private val client = {
+    val sendUncaughtExceptions = false // we are doing this ourselves
+    new BugsnagClient(apiKey, sendUncaughtExceptions)
+  }
+
+  // use this instance as uncaught exception handler
+  val self = this
+  val selfAsUncaughtExceptionHandler = new UncaughtExceptionHandler {
+    override def uncaughtException(t: Thread, e: Throwable): Unit = self.report(e)
+  }
+  Thread.setDefaultUncaughtExceptionHandler(selfAsUncaughtExceptionHandler)
 
   override def report(t: Throwable): Unit = report(t, Seq.empty)
 
@@ -56,6 +69,7 @@ case class BugSnaggerImpl(apiKey: String) extends BugSnagger {
     report.addToTab("App", "service", service)
     report.addToTab("App", "version", gitSha)
     report.addToTab("App", "hostname", hostName)
+    report.addToTab("App", "region", region)
 
     requestHeader.foreach { headers =>
       report.addToTab("Request", "uri", headers.uri)
