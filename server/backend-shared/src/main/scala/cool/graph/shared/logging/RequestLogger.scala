@@ -13,6 +13,11 @@ class RequestLogger(
   val requestId: String                  = requestIdPrefix + ":" + createCuid()
   var requestBeginningTime: Option[Long] = None
 
+  val isReportLongRequestsEnabled = sys.env.get("REPORT_LONG_REQUESTS_DISABLED") match {
+    case Some("1") => false
+    case _         => true
+  }
+
   def query(query: String, args: String): Unit = {
     log(
       LogData(
@@ -38,7 +43,7 @@ class RequestLogger(
       case Some(beginTime) =>
         val duration = System.currentTimeMillis() - beginTime
         BackendSharedMetrics.requestDuration.record(duration, Seq(projectId))
-        val payload = if (duration >= 2000) {
+        val payload = if (duration >= 2000 && isReportLongRequestsEnabled) {
           val request = GraphCoolRequest(
             requestId = requestId,
             clientId = clientId,
