@@ -1,8 +1,7 @@
 package cool.graph.shared.logging
 
-import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
+import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid.createCuid
-import cool.graph.shared.BackendSharedMetrics
 
 case class RequestTookVeryLongException(duration: Long) extends Exception(s"the request took very long: $duration ms")
 
@@ -14,11 +13,6 @@ class RequestLogger(
   var requestBeginningTime = System.currentTimeMillis()
 
   log(LogData(LogKey.RequestNew, requestId).json)
-
-  val isReportLongRequestsEnabled = sys.env.get("REPORT_LONG_REQUESTS_DISABLED") match {
-    case Some("1") => false
-    case _         => true
-  }
 
   def query(query: String, args: String): Unit = {
     log(

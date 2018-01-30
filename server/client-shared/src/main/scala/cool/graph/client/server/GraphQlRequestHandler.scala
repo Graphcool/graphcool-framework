@@ -2,10 +2,13 @@ package cool.graph.client.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
+import cool.graph.bugsnag.GraphCoolRequest
 import cool.graph.client.FeatureMetric.FeatureMetric
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.{ClientInjector, ProjectLockdownMiddleware, UserContext}
+import cool.graph.shared.BackendSharedMetrics
+import cool.graph.shared.logging.RequestTookVeryLongException
 import cool.graph.util.ErrorHandlerFactory
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import spray.json.{JsArray, JsValue}
@@ -29,6 +32,11 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
     extends GraphQlRequestHandler {
   import cool.graph.shared.schema.JsonMarshalling._
 
+  val isReportLongRequestsEnabled = sys.env.get("REPORT_LONG_REQUESTS_DISABLED") match {
+    case Some("1") => false
+    case _         => true
+  }
+
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {
       handleQuery(request = graphQlRequest, query = graphQlRequest.queries.head)
@@ -36,7 +44,10 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
       val results: Seq[Future[JsValue]] = graphQlRequest.queries.map(query => handleQuery(graphQlRequest, query))
       Future.sequence(results).map(results => JsArray(results.toVector))
     }
-    jsonResult.map(OK -> _)
+    jsonResult.map { json =>
+      reportDuration(graphQlRequest)
+      OK -> json
+    }
   }
 
   def handleQuery(
@@ -87,6 +98,21 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
       case error: Throwable ⇒
         unhandledErrorLogger(error)._2
     }
+  }
+
+  def reportDuration(request: GraphQlRequest): Unit = {
+    val duration = System.currentTimeMillis() - request.logger.requestBeginningTime
+    if (duration >= 2000 && isReportLongRequestsEnabled) {
+      val requestForBugsnag = GraphCoolRequest(
+        requestId = request.id,
+        clientId = Some(request.projectWithClientId.clientId),
+        projectId = Some(request.project.id),
+        query = request.queries.map(_.queryString).mkString("\n"),
+        variables = ""
+      )
+      injector.bugsnagger.report(RequestTookVeryLongException(duration), requestForBugsnag)
+    }
+    BackendSharedMetrics.requestDuration.record(duration, Seq(request.project.id))
   }
 
   override def healthCheck: Future[Unit] = Future.successful(())
