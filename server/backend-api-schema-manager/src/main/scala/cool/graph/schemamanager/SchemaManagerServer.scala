@@ -49,9 +49,8 @@ case class SchemaManagerServer(prefix: String = "")(
 
   val innerRoutes = extractRequest { _ =>
     val requestLogger = new RequestLogger(requestPrefix + ":schema-manager", log = log)
-    val requestId     = requestLogger.begin
 
-    handleExceptions(errorHandlerFactory.akkaHttpHandler(requestId)) {
+    handleExceptions(errorHandlerFactory.akkaHttpHandler(requestLogger.requestId)) {
       pathPrefix(Segment) { projectId =>
         get {
           optionalHeaderValueByName("Authorization") {

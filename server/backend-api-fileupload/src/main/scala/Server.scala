@@ -117,7 +117,6 @@ object Server extends App with LazyLogging {
 
           val requestLogger =
             new RequestLogger(requestIdPrefix = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found.")) + ":file", log = log)(BugSnaggerMock)
-          val requestId = requestLogger.begin
 
           Unmarshal(x.request.entity)
             .to[Multipart.FormData]
@@ -141,7 +140,7 @@ object Server extends App with LazyLogging {
                 project = x.project,
                 clientId = x.clientId,
                 authenticatedRequest = x.clientOrUserId,
-                requestId = requestId,
+                requestId = requestLogger.requestId,
                 requestIp = "ip.toString"
               ).andThen {
                 case _ =>
@@ -162,7 +161,7 @@ object Server extends App with LazyLogging {
                                       .map(_.headers)
                                       .getOrElse(Seq.empty),
                                     origins))
-                    .getOrElse(Seq()) :+ RawHeader("Request-Id", requestId)
+                    .getOrElse(Seq()) :+ RawHeader("Request-Id", requestLogger.requestId)
                 )
             }
 

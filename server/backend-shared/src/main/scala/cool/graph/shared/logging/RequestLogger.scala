@@ -10,8 +10,10 @@ class RequestLogger(
     requestIdPrefix: String,
     log: Function[String, Unit]
 )(implicit bugsnag: BugSnagger) {
-  val requestId: String                  = requestIdPrefix + ":" + createCuid()
-  var requestBeginningTime: Option[Long] = None
+  val requestId            = requestIdPrefix + ":" + createCuid()
+  var requestBeginningTime = System.currentTimeMillis()
+
+  log(LogData(LogKey.RequestNew, requestId).json)
 
   val isReportLongRequestsEnabled = sys.env.get("REPORT_LONG_REQUESTS_DISABLED") match {
     case Some("1") => false
@@ -28,42 +30,16 @@ class RequestLogger(
     )
   }
 
-  def begin: String = {
-    requestBeginningTime = Some(System.currentTimeMillis())
-    log(LogData(LogKey.RequestNew, requestId).json)
-
-    requestId
+  def end(projectId: String, clientId: Option[String], query: Option[String] = None): Unit = {
+    val duration = System.currentTimeMillis() - requestBeginningTime
+    val payload  = Map("request_duration" -> duration, "query" -> query.getOrElse("query not captured"))
+    log(
+      LogData(
+        key = LogKey.RequestComplete,
+        requestId = requestId,
+        projectId = Some(projectId),
+        clientId = clientId,
+        payload = Some(payload)
+      ).json)
   }
-
-  def end(projectId: String, clientId: Option[String], query: Option[String] = None): Unit =
-    requestBeginningTime match {
-      case None =>
-        sys.error("you must call begin before end")
-
-      case Some(beginTime) =>
-        val duration = System.currentTimeMillis() - beginTime
-        BackendSharedMetrics.requestDuration.record(duration, Seq(projectId))
-        val payload = if (duration >= 2000 && isReportLongRequestsEnabled) {
-          val request = GraphCoolRequest(
-            requestId = requestId,
-            clientId = clientId,
-            projectId = Some(projectId),
-            query = query.getOrElse("not provided"),
-            variables = ""
-          )
-          bugsnag.report(RequestTookVeryLongException(duration), request)
-          Map("request_duration" -> duration, "query" -> query.getOrElse("query not captured"))
-        } else {
-          Map("request_duration" -> duration)
-        }
-        log(
-          LogData(
-            key = LogKey.RequestComplete,
-            requestId = requestId,
-            projectId = Some(projectId),
-            clientId = clientId,
-            payload = Some(payload)
-          ).json
-        )
-    }
 }

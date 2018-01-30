@@ -49,7 +49,6 @@ case class ClientServer(prefix: String)(
 
   val innerRoutes: Route = extractRequest { _ =>
     val requestLogger = new RequestLogger(requestIdPrefix = requestIdPrefix, log = log)
-    requestLogger.begin
 
     handleExceptions(toplevelExceptionHandler(requestLogger.requestId)) {
       PrivateClientApi().privateRoute ~ pathPrefix("v1") {
