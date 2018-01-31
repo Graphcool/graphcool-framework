@@ -249,4 +249,3 @@ This will return info about the `User` and two of the three associated `Post` no
 * Get more practical experience with our [Guides](https://graph.cool/docs/tutorials)
 * Secure your API by learning about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
 * Implement business logic with [Functions](!alias-aiw4aimie9)
-
