@@ -132,15 +132,12 @@ class SystemAuth()(implicit inj: Injector) extends Injectable {
                 generateSessionToken(customers.head.id).map(sessionToken => Some((sessionToken, customers.head.id)))
 
               }
-              case (Some(auth0Id), email)
-                  // note: the isEmail check is disabled until we fix the Auth0 account linking issue
-                  if (auth0Id != idTokenData.get.sub) /*&& !isAuth0IdentityProviderEmail*/ => {
+              case (Some(auth0Id), email) if (auth0Id != idTokenData.get.sub) && isAuth0IdentityProviderEmail =>
                 // Auth0 returns wrong id first time for linked accounts.
                 // Let's just go ahead and match on email only as long as it is provided by a social provider
                 // that has already verified the email
                 generateSessionToken(customers.head.id).map(sessionToken => Some((sessionToken, customers.head.id)))
 
-              }
               case (Some(auth0Id), email) if auth0Id != idTokenData.get.sub => {
                 // reject
                 throw DuplicateEmailFromMultipleProviders(email)
