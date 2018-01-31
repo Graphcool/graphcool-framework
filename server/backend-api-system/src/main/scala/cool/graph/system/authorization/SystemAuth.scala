@@ -101,8 +101,6 @@ class SystemAuth()(implicit inj: Injector) extends Injectable {
       return Future.successful(None)
     }
 
-    val isAuth0IdentityProviderEmail = idTokenData.get.sub.split("\\|").head == "auth0"
-
     internalDatabase
       .run(
         Clients
@@ -118,12 +116,13 @@ class SystemAuth()(implicit inj: Injector) extends Injectable {
             (customers.head.auth0Id, customers.head.email) match {
               case (None, email) => {
                 // sign in and add auth0Id
+                val isAuth0IdentityProviderEmailFromToken = idTokenData.get.sub.split("\\|").head == "auth0"
                 generateSessionToken(customers.head.id).andThenFuture(
                   handleSuccess = res =>
                     internalDatabase.run((for {
                       c <- Clients if c.id === customers.head.id
                     } yield (c.auth0Id, c.isAuth0IdentityProviderEmail))
-                      .update((Some(idTokenData.get.sub), isAuth0IdentityProviderEmail))),
+                      .update((Some(idTokenData.get.sub), isAuth0IdentityProviderEmailFromToken))),
                   handleFailure = e => Future.successful(())
                 ) map (sessionToken => Some((sessionToken, customers.head.id)))
               }
@@ -132,7 +131,7 @@ class SystemAuth()(implicit inj: Injector) extends Injectable {
                 generateSessionToken(customers.head.id).map(sessionToken => Some((sessionToken, customers.head.id)))
 
               }
-              case (Some(auth0Id), email) if (auth0Id != idTokenData.get.sub) && isAuth0IdentityProviderEmail =>
+              case (Some(auth0Id), email) if (auth0Id != idTokenData.get.sub) && customers.head.isAuth0IdentityProviderEmail =>
                 // Auth0 returns wrong id first time for linked accounts.
                 // Let's just go ahead and match on email only as long as it is provided by a social provider
                 // that has already verified the email
