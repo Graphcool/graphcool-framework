@@ -178,7 +178,6 @@ The response could look something like this:
 * remote file upload - [version 1](https://github.com/graphcool/content/issues/30) and [version 2](https://github.com/graphcool/content/issues/59)
 * `axios` - [example](https://github.com/graphcool/content/issues/95)
 * `ng2-file-upload` on Angular - [example](https://github.com/graphcool/content/issues/112)
-* `react-dropzone` on React - [example](https://github.com/graphcool-examples/react-graphql/tree/master/files-with-apollo)
 * you can drag-and-drop files into the sidebar of the Console to upload a file
 
 
