@@ -108,7 +108,7 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
         clientId = Some(request.projectWithClientId.clientId),
         projectId = Some(request.project.id),
         query = request.queries.map(_.queryString).mkString("\n"),
-        variables = ""
+        variables = request.queries.map(_.variables.toString).mkString("\n")
       )
       injector.bugsnagger.report(RequestTookVeryLongException(duration), requestForBugsnag)
     }
