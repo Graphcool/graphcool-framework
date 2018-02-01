@@ -42,9 +42,6 @@ case class ClientServer(prefix: String)(
   val requestPrefix: String  = injector.requestPrefix
   val requestIdPrefix        = s"$requestPrefix:$prefix"
 
-  // For health checks. Only one publisher inject required (as multiple should share the same client).
-  val kinesis: KinesisPublisher = injector.kinesisAlgoliaSyncQueriesPublisher
-
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 
   val innerRoutes: Route = extractRequest { _ =>
