@@ -3,7 +3,7 @@ package cool.graph.system.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph._
-import cool.graph.metrics.CounterMetric
+import cool.graph.metrics.{CounterMetric, CustomTag}
 import cool.graph.shared.database.{InternalAndProjectDbs, InternalDatabase}
 import cool.graph.shared.errors.SystemErrors.{SchemaError, WithSchemaError}
 import cool.graph.shared.functions.ExternalFile
@@ -61,7 +61,7 @@ case class PushMutation(
             actions = result.mutactions.toList
             verbalDescriptions = result.verbalDescriptions
             errors = result.errors
-            PushMutation.pushMutationMutactionsCount.incBy(this.actions.length)
+            PushMutation.pushMutationMutactionsCount.incBy(this.actions.length, project.id)
 
           case Failure(error) =>
             actions = List.empty
@@ -120,7 +120,7 @@ case class PushMutation(
 
 object PushMutation {
 
-  val pushMutationMutactionsCount: CounterMetric = SystemMetrics.defineCounter("pushMutationMutactionsCount")
+  val pushMutationMutactionsCount: CounterMetric = SystemMetrics.defineCounter("pushMutationMutactionsCount", CustomTag("projectId", recordingThreshold = 100))
   val pushMutationCount: CounterMetric           = SystemMetrics.defineCounter("pushMutationCount")
 
 }
