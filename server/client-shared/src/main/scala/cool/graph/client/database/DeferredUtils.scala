@@ -12,17 +12,14 @@ object DeferredUtils {
     }
   }
 
-  def groupModelDeferred[T <: ModelDeferred[Any]](modelDeferred: Vector[OrderedDeferred[T]]): Map[(Model, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
+  def groupModelDeferred[T <: ModelDeferred[Any]](
+      modelDeferred: Vector[OrderedDeferred[T]]): Map[(Model, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
     modelDeferred.groupBy(ordered => (ordered.deferred.model, ordered.deferred.args))
   }
 
   def groupModelExistsDeferred[T <: ModelDeferred[Any]](
       modelExistsDeferred: Vector[OrderedDeferred[T]]): Map[(Model, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
     modelExistsDeferred.groupBy(ordered => (ordered.deferred.model, ordered.deferred.args))
-  }
-
-  def groupOneDeferred[T <: OneDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[Model, Vector[OrderedDeferred[T]]] = {
-    oneDeferred.groupBy(ordered => ordered.deferred.model)
   }
 
   def groupRelatedDeferred[T <: RelationDeferred[Any]](
@@ -69,19 +66,6 @@ object DeferredUtils {
 
     if (countSimilarDeferreds != deferreds.length) {
       throw new Error("Passed deferreds should not belong to different relations and should not have different arguments.")
-    }
-  }
-
-  def checkSimilarityOfOneDeferredsAndThrow(deferreds: Vector[OneDeferred]) = {
-    val headDeferred = deferreds.head
-
-    val countSimilarDeferreds = deferreds.count { d =>
-      d.key == headDeferred.key &&
-      d.model == headDeferred.model
-    }
-
-    if (countSimilarDeferreds != deferreds.length) {
-      throw new Error("Passed deferreds should not have different key or model.")
     }
   }
 

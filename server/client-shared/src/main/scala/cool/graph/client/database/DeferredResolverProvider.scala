@@ -52,11 +52,6 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
         OrderedDeferred(deferred, order)
     }
 
-    val oneDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: OneDeferred, order) =>
-        OrderedDeferred(deferred, order)
-    }
-
     val checkScalarFieldPermissionsDeferreds = orderedDeferred.collect {
       case OrderedDeferred(deferred: CheckPermissionDeferred, order) =>
         OrderedDeferred(deferred, order)
@@ -80,8 +75,6 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
 
     val toOneDeferredMap =
       DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
-
-    val oneDeferredsMap = DeferredUtils.groupOneDeferred(oneDeferreds)
 
     val checkScalarFieldPermissionsDeferredsMap =
       DeferredUtils.groupPermissionDeferred(checkScalarFieldPermissionsDeferreds)
@@ -135,14 +128,6 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
       .toVector
       .flatten
 
-    val oneFutureResult = oneDeferredsMap
-      .map {
-        case (key, value) =>
-          new OneDeferredResolver().resolve(value, ctx.dataResolver)
-      }
-      .toVector
-      .flatten
-
     val begin = System.currentTimeMillis()
 
     val checkScalarFieldPermissionsFutureResults =
@@ -167,7 +152,6 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
       toManyFutureResults ++
       countToManyFutureResults ++
       toOneFutureResults ++
-      oneFutureResult ++
       checkScalarFieldPermissionsFutureResults).sortBy(_.order).map(_.future)
   }
 }
