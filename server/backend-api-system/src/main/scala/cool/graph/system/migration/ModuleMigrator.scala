@@ -14,10 +14,13 @@ import cool.graph.system.migration.rootTokens.RootTokenDiff
 import cool.graph.system.mutations._
 import scaldi.{Injectable, Injector}
 import spray.json.{JsObject, JsString}
+import cool.graph.utils.future.FutureUtils._
 
 import scala.collection.Seq
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ModuleMigrator {
   def apply(client: Client,
@@ -27,23 +30,17 @@ object ModuleMigrator {
             externalFiles: Option[Map[String, ExternalFile]],
             afterSchemaMigration: Boolean = false,
             isDryRun: Boolean)(implicit inj: Injector): ModuleMigrator = {
-    val oldModule = ProjectConfig.moduleFromProject(project)
-
-    val schemas: Seq[String] = parsedModules.map(module => module.types.map(x => files.getOrElse(x, sys.error("path to types not correct"))).getOrElse("")) // todo: this is ugly
-    val combinedSchema       = schemas.mkString(" ")
-
+    val oldModule                          = ProjectConfig.moduleFromProject(project)
+    val schemas: Seq[String]               = parsedModules.map(module => module.types.map(x => files.getOrElse(x, sys.error("path to types not correct"))).getOrElse("")) // todo: this is ugly
+    val combinedSchema                     = schemas.mkString(" ")
     val newPermissions: Vector[Permission] = parsedModules.flatMap(_.permissions).toVector
-
     val newPermissionsWithQueryFile: Vector[AstPermissionWithAllInfos] = newPermissions.map(permission => {
       astPermissionWithAllInfosFromAstPermission(permission, files)
     })
 
-    val newFunctionsMapList: Seq[Map[String, ProjectConfig.Ast.Function]] = parsedModules.map(_.functions)
-    val combinedFunctionsList: Map[String, ProjectConfig.Ast.Function] =
-      newFunctionsMapList.foldLeft(Map.empty: Map[String, ProjectConfig.Ast.Function])(_ ++ _)
-
-    val newRootTokens: Vector[String] = parsedModules.flatMap(_.rootTokens).toVector
-
+    val newFunctionsMapList            = parsedModules.map(_.functions)
+    val combinedFunctionsList          = newFunctionsMapList.foldLeft(Map.empty: Map[String, ProjectConfig.Ast.Function])(_ ++ _)
+    val newRootTokens: Vector[String]  = parsedModules.flatMap(_.rootTokens).toVector
     val functionDiff: FunctionDiff     = FunctionDiff(project, oldModule.module, combinedFunctionsList, files)
     val permissionDiff: PermissionDiff = PermissionDiff(project, newPermissionsWithQueryFile, files, afterSchemaMigration)
     val rootTokenDiff: RootTokenDiff   = RootTokenDiff(project, newRootTokens)
@@ -52,15 +49,17 @@ object ModuleMigrator {
   }
 }
 
-case class ModuleMigrator(functionDiff: FunctionDiff,
-                          permissionDiff: PermissionDiff,
-                          rootTokenDiff: RootTokenDiff,
-                          client: Client,
-                          project: Project,
-                          files: Map[String, String],
-                          externalFiles: Option[Map[String, ExternalFile]],
-                          schemaContent: String,
-                          isDryRun: Boolean)(implicit inj: Injector)
+case class ModuleMigrator(
+    functionDiff: FunctionDiff,
+    permissionDiff: PermissionDiff,
+    rootTokenDiff: RootTokenDiff,
+    client: Client,
+    project: Project,
+    files: Map[String, String],
+    externalFiles: Option[Map[String, ExternalFile]],
+    schemaContent: String,
+    isDryRun: Boolean
+)(implicit inj: Injector)
     extends Injectable {
 
   val functionEnvironment: FunctionEnvironment = inject[FunctionEnvironment]
@@ -99,100 +98,116 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
 
   private def getFileContent(filePath: String) = files.getOrElse(filePath, sys.error(s"File with path '$filePath' does not exist"))
 
-  lazy val subscriptionFunctionsToAdd: Vector[AddServerSideSubscriptionFunctionAction] =
-    functionDiff.addedSubscriptionFunctions.map {
+  lazy val subscriptionFunctionsToAdd: Vector[AddServerSideSubscriptionFunctionAction] = {
+    val additions = functionDiff.addedSubscriptionFunctions.map {
       case FunctionWithFiles(name, function, fc) =>
-        val (code, extendFunction, webhookUrl, headers) = setupFunction(name, function, client)
+        setupFunction(name, function, client).map {
+          case (code, extendFunction, webhookUrl, headers) =>
+            val input = AddServerSideSubscriptionFunctionInput(
+              clientMutationId = None,
+              projectId = project.id,
+              name = name,
+              isActive = true,
+              query = getFileContent(function.query.getOrElse(sys.error("query file path expected"))),
+              functionType = function.handlerType,
+              url = webhookUrl,
+              headers = headers,
+              inlineCode = code,
+              auth0Id = extendFunction.map(_.auth0Id),
+              codeFilePath = fc.codeContainer.map(_.path),
+              queryFilePath = fc.queryContainer.map(_.path)
+            )
 
-        val input = AddServerSideSubscriptionFunctionInput(
-          clientMutationId = None,
-          projectId = project.id,
-          name = name,
-          isActive = true,
-          query = getFileContent(function.query.getOrElse(sys.error("query file path expected"))),
-          functionType = function.handlerType,
-          url = webhookUrl,
-          headers = headers,
-          inlineCode = code,
-          auth0Id = extendFunction.map(_.auth0Id),
-          codeFilePath = fc.codeContainer.map(_.path),
-          queryFilePath = fc.queryContainer.map(_.path)
-        )
-        AddServerSideSubscriptionFunctionAction(input)
+            AddServerSideSubscriptionFunctionAction(input)
+        }
     }
 
-  lazy val subscriptionFunctionsToUpdate: Vector[UpdateServerSideSubscriptionFunctionAction] =
-    functionDiff.updatedSubscriptionFunctions.map {
+    Await.result(Future.sequence(additions), Duration.Inf)
+  }
+
+  lazy val subscriptionFunctionsToUpdate: Vector[UpdateServerSideSubscriptionFunctionAction] = {
+    val updates = functionDiff.updatedSubscriptionFunctions.map {
       case FunctionWithFiles(name, function, fc) =>
-        val (code, extendFunction, webhookUrl, headers) = setupFunction(name, function, client)
+        setupFunction(name, function, client).map {
+          case (code, extendFunction, webhookUrl, headers) =>
+            val functionId = project.getFunctionByName_!(name).id
+            val input = UpdateServerSideSubscriptionFunctionInput(
+              clientMutationId = None,
+              functionId = functionId,
+              name = Some(name),
+              isActive = Some(true),
+              query = Some(getFileContent(function.query.getOrElse(sys.error("query file path expected")))),
+              functionType = Some(function.handlerType),
+              webhookUrl = webhookUrl,
+              headers = headers,
+              inlineCode = code,
+              auth0Id = extendFunction.map(_.auth0Id)
+            )
 
-        val functionId = project.getFunctionByName_!(name).id
-
-        val input = UpdateServerSideSubscriptionFunctionInput(
-          clientMutationId = None,
-          functionId = functionId,
-          name = Some(name),
-          isActive = Some(true),
-          query = Some(getFileContent(function.query.getOrElse(sys.error("query file path expected")))),
-          functionType = Some(function.handlerType),
-          webhookUrl = webhookUrl,
-          headers = headers,
-          inlineCode = code,
-          auth0Id = extendFunction.map(_.auth0Id)
-        )
-        UpdateServerSideSubscriptionFunctionAction(input)
+            UpdateServerSideSubscriptionFunctionAction(input)
+        }
     }
 
-  lazy val schemaExtensionFunctionsToAdd: Vector[AddSchemaExtensionFunctionAction] =
-    functionDiff.addedSchemaExtensionFunctions.map {
+    Await.result(Future.sequence(updates), Duration.Inf)
+  }
+
+  lazy val schemaExtensionFunctionsToAdd: Vector[AddSchemaExtensionFunctionAction] = {
+    val additions = functionDiff.addedSchemaExtensionFunctions.map {
       case FunctionWithFiles(name, function, fc) =>
-        val (code, extendFunction, webhookUrl, headers) = setupFunction(name, function, client)
+        setupFunction(name, function, client).map {
+          case (code, extendFunction, webhookUrl, headers) =>
+            val input = AddSchemaExtensionFunctionInput(
+              clientMutationId = None,
+              projectId = project.id,
+              name = name,
+              isActive = true,
+              schema = getFileContent(function.schema.getOrElse(sys.error("schema file path expected"))),
+              functionType = function.handlerType,
+              url = webhookUrl,
+              headers = headers,
+              inlineCode = code,
+              auth0Id = extendFunction.map(_.auth0Id),
+              codeFilePath = fc.codeContainer.map(_.path),
+              schemaFilePath = fc.schemaContainer.map(_.path)
+            )
 
-        val input = AddSchemaExtensionFunctionInput(
-          clientMutationId = None,
-          projectId = project.id,
-          name = name,
-          isActive = true,
-          schema = getFileContent(function.schema.getOrElse(sys.error("schema file path expected"))),
-          functionType = function.handlerType,
-          url = webhookUrl,
-          headers = headers,
-          inlineCode = code,
-          auth0Id = extendFunction.map(_.auth0Id),
-          codeFilePath = fc.codeContainer.map(_.path),
-          schemaFilePath = fc.schemaContainer.map(_.path)
-        )
-
-        AddSchemaExtensionFunctionAction(input)
+            AddSchemaExtensionFunctionAction(input)
+        }
     }
 
-  lazy val schemaExtensionFunctionsToUpdate: Vector[UpdateSchemaExtensionFunctionAction] =
-    functionDiff.updatedSchemaExtensionFunctions.map {
+    Await.result(Future.sequence(additions), Duration.Inf)
+  }
+
+  lazy val schemaExtensionFunctionsToUpdate: Vector[UpdateSchemaExtensionFunctionAction] = {
+    val updates = functionDiff.updatedSchemaExtensionFunctions.map {
       case FunctionWithFiles(name, function, fc) =>
-        val (code, extendFunction, webhookUrl, headers) = setupFunction(name, function, client)
+        setupFunction(name, function, client).map {
+          case (code, extendFunction, webhookUrl, headers) =>
+            val functionId = project.getFunctionByName_!(name).id
+            val input = UpdateSchemaExtensionFunctionInput(
+              clientMutationId = None,
+              functionId = functionId,
+              name = Some(name),
+              isActive = Some(true),
+              schema = Some(getFileContent(function.schema.getOrElse(sys.error("schema file path expected")))),
+              functionType = Some(function.handlerType),
+              webhookUrl = webhookUrl,
+              headers = headers,
+              inlineCode = code,
+              auth0Id = extendFunction.map(_.auth0Id),
+              codeFilePath = fc.codeContainer.map(_.path),
+              schemaFilePath = fc.schemaContainer.map(_.path)
+            )
 
-        val functionId = project.getFunctionByName_!(name).id
-
-        val input = UpdateSchemaExtensionFunctionInput(
-          clientMutationId = None,
-          functionId = functionId,
-          name = Some(name),
-          isActive = Some(true),
-          schema = Some(getFileContent(function.schema.getOrElse(sys.error("schema file path expected")))),
-          functionType = Some(function.handlerType),
-          webhookUrl = webhookUrl,
-          headers = headers,
-          inlineCode = code,
-          auth0Id = extendFunction.map(_.auth0Id),
-          codeFilePath = fc.codeContainer.map(_.path),
-          schemaFilePath = fc.schemaContainer.map(_.path)
-        )
-
-        UpdateSchemaExtensionFunctionAction(input)
+            UpdateSchemaExtensionFunctionAction(input)
+        }
     }
 
-  lazy val operationFunctionsToAdd: Vector[AddOperationFunctionAction] =
-    functionDiff.addedRequestPipelineFunctions.map {
+    Await.result(Future.sequence(updates), Duration.Inf)
+  }
+
+  lazy val operationFunctionsToAdd: Vector[AddOperationFunctionAction] = {
+    val additions = functionDiff.addedRequestPipelineFunctions.map {
       case FunctionWithFiles(name, function, fc) =>
         val x         = function.operation.getOrElse(sys.error("operation is required for subscription function")).split("\\.").toVector
         val modelName = x(0)
@@ -210,29 +225,33 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
           case None                => sys.error(s"Error in ${function.`type`} function '$name': No model with name '$modelName' found. Please supply a valid model.")
         }
 
-        val (code, extendFunction, webhookUrl, headers) = setupFunction(name, function, client)
+        setupFunction(name, function, client).map {
+          case (code, extendFunction, webhookUrl, headers) =>
+            val input = AddRequestPipelineMutationFunctionInput(
+              clientMutationId = None,
+              projectId = project.id,
+              name = name,
+              isActive = true,
+              functionType = function.handlerType,
+              binding = function.binding,
+              modelId = modelId,
+              operation = rpOperation,
+              webhookUrl = webhookUrl,
+              headers = headers,
+              inlineCode = code,
+              auth0Id = extendFunction.map(_.auth0Id),
+              codeFilePath = fc.codeContainer.map(_.path)
+            )
 
-        val input = AddRequestPipelineMutationFunctionInput(
-          clientMutationId = None,
-          projectId = project.id,
-          name = name,
-          isActive = true,
-          functionType = function.handlerType,
-          binding = function.binding,
-          modelId = modelId,
-          operation = rpOperation,
-          webhookUrl = webhookUrl,
-          headers = headers,
-          inlineCode = code,
-          auth0Id = extendFunction.map(_.auth0Id),
-          codeFilePath = fc.codeContainer.map(_.path)
-        )
-
-        AddOperationFunctionAction(input)
+            AddOperationFunctionAction(input)
+        }
     }
 
-  lazy val operationFunctionsToUpdate: Vector[UpdateOperationFunctionAction] =
-    functionDiff.updatedRequestPipelineFunctions.map {
+    Await.result(Future.sequence(additions), Duration.Inf)
+  }
+
+  lazy val operationFunctionsToUpdate: Vector[UpdateOperationFunctionAction] = {
+    val updates = functionDiff.updatedRequestPipelineFunctions.map {
       case FunctionWithFiles(name, function, fc) =>
         val x         = function.operation.getOrElse(sys.error("operation is required for subscription function")).split("\\.").toVector
         val modelName = x(0)
@@ -251,57 +270,58 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
 
         val functionId = project.getFunctionByName_!(name).id
 
-        val (code, extendFunction, webhookUrl, headers) = setupFunction(name, function, client)
+        setupFunction(name, function, client).map {
+          case (code, extendFunction, webhookUrl, headers) =>
+            val input = UpdateRequestPipelineMutationFunctionInput(
+              clientMutationId = None,
+              functionId = functionId,
+              name = Some(name),
+              isActive = Some(true),
+              functionType = Some(function.handlerType),
+              binding = Some(function.binding),
+              modelId = Some(modelId),
+              operation = Some(rpOperation),
+              webhookUrl = webhookUrl,
+              headers = headers,
+              inlineCode = code,
+              auth0Id = extendFunction.map(_.auth0Id)
+            )
 
-        val input = UpdateRequestPipelineMutationFunctionInput(
-          clientMutationId = None,
-          functionId = functionId,
-          name = Some(name),
-          isActive = Some(true),
-          functionType = Some(function.handlerType),
-          binding = Some(function.binding),
-          modelId = Some(modelId),
-          operation = Some(rpOperation),
-          webhookUrl = webhookUrl,
-          headers = headers,
-          inlineCode = code,
-          auth0Id = extendFunction.map(_.auth0Id)
-        )
-
-        UpdateOperationFunctionAction(input)
+            UpdateOperationFunctionAction(input)
+        }
     }
+
+    Await.result(Future.sequence(updates), 20.seconds)
+  }
 
   /**
-    *
-    * Determine if the function is webhook, auth0Extend or a normal code handler.
-    * Return corresponding function details
+    * Determine if the function is a webhook, auth0Extend, or a normal code handler.
+    * Return corresponding function details.
     */
-  def setupFunction(name: String, function: Ast.Function, client: Client): (Option[String], Option[Auth0FunctionData], Option[String], Option[String]) = {
+  def setupFunction(name: String,
+                    function: Ast.Function,
+                    client: Client): Future[(Option[String], Option[Auth0FunctionData], Option[String], Option[String])] = {
     val code: Option[String]               = function.handler.code.flatMap(x => files.get(x.src))
     val externalFile: Option[ExternalFile] = function.handler.code.flatMap(x => externalFiles.flatMap(_.get(x.src)))
 
     (code, externalFile) match {
-
       case (Some(codeContent), _) => // Auth0 Extend
-        val extendFunction: Auth0FunctionData = createAuth0Function(client = client, code = codeContent, functionName = name)
-
-        (Some(codeContent), Some(extendFunction), Some(extendFunction.url), None)
-      case (None, Some(externalFileContent)) => // Normal Code Handler
-        deployFunctionToRuntime(project, externalFileContent, name) match {
-          case DeployFailure(e) => throw e
-          case _                =>
+        createAuth0Function(client = client, code = codeContent, functionName = name).map { extendFunction: Auth0FunctionData =>
+          (Some(codeContent), Some(extendFunction), Some(extendFunction.url), None)
         }
 
-        (None, None, None, None)
-      case _ => // Webhook
-        val webhookUrl: String =
-          function.handler.webhook.map(_.url).getOrElse(sys.error("webhook url or inline code required"))
+      case (None, Some(externalFileContent)) => // Normal Code Handler
+        deployFunctionToRuntime(project, externalFileContent, name).map {
+          case DeployFailure(e) => throw e
+          case _                => (None, None, None, None)
+        }
 
+      case _ => // Webhook
+        val webhookUrl: String      = function.handler.webhook.map(_.url).getOrElse(sys.error("webhook url or inline code required"))
         val headerMap               = function.handler.webhook.map(_.headers)
         val jsonHeader              = headerMap.map(value => JsObject(value.map { case (key, other) => (key, JsString(other)) }))
         val headers: Option[String] = jsonHeader.map(_.toString)
-
-        (code, None, Some(webhookUrl), headers)
+        Future.successful((code, None, Some(webhookUrl), headers))
     }
 
   }
@@ -452,25 +472,25 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
       CreateRootTokenAction(input, rootTokenName)
     })
 
-  // todo: move this around so we don't have to use Await.result
-  def createAuth0Function(client: Client, code: String, functionName: String): Auth0FunctionData = {
+  def createAuth0Function(client: Client, code: String, functionName: String): Future[Auth0FunctionData] = {
     if (isDryRun) {
-      Auth0FunctionData("dryRun.url", "dryRun-id")
-    }
-    try {
-      val future = auth0Extend.createAuth0Function(client, code)
-      Await.result(future, Duration.Inf)
-    } catch {
-      case _: Throwable => throw ProjectPushError(description = s"Could not create serverless function for '$functionName'. Ensure that the code is valid")
-    }
+      Future.successful(Auth0FunctionData("dryRun.url", "dryRun-id"))
+    } else {
+      auth0Extend.createAuth0Function(client, code).toFutureTry.flatMap {
+        case Success(result) =>
+          Future.successful(result)
 
+        case Failure(_) =>
+          Future.failed(ProjectPushError(description = s"Could not create serverless function for '$functionName'. Ensure that the code is valid"))
+      }
+    }
   }
 
-  def deployFunctionToRuntime(project: Project, externalFile: ExternalFile, functionName: String): DeployResponse = {
+  def deployFunctionToRuntime(project: Project, externalFile: ExternalFile, functionName: String): Future[DeployResponse] = {
     if (isDryRun) {
-      DeploySuccess()
+      Future.successful(DeploySuccess())
     } else {
-      Await.result(functionEnvironment.deploy(project, externalFile, functionName), Duration.Inf)
+      functionEnvironment.deploy(project, externalFile, functionName)
     }
   }
 }
