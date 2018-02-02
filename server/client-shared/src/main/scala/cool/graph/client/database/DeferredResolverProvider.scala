@@ -2,6 +2,7 @@ package cool.graph.client.database
 
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DeferredTypes._
+import cool.graph.metrics.ClientSharedMetrics
 import sangria.execution.deferred.{Deferred, DeferredResolver}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -142,6 +143,8 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
       .toVector
       .flatten
 
+    val begin = System.currentTimeMillis()
+
     val checkScalarFieldPermissionsFutureResults =
       checkScalarFieldPermissionsDeferredsMap
         .map {
@@ -150,6 +153,14 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
         }
         .toVector
         .flatten
+
+    Future.sequence(checkScalarFieldPermissionsFutureResults.map(_.future)).onComplete { _ =>
+      val duration = System.currentTimeMillis() - begin
+      if (duration > 10) {
+        println(s"permission checking took: $duration ms")
+        ClientSharedMetrics.permissionCheckingTimer.record(duration, Seq(ctx.dataResolver.project.id))
+      }
+    }
 
     (manyModelFutureResults ++
       manyModelExistsFutureResults ++
