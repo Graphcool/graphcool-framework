@@ -2,9 +2,11 @@ package cool.graph.metrics
 
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorSystem, Props}
 import com.timgroup.statsd.StatsDClient
+import cool.graph.metrics.FlushingCounterActor.{Flush, FlushingCounterMeasurement}
 
+import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -63,7 +65,47 @@ case class CounterMetric(name: String, baseTags: String, customTags: Seq[CustomT
   // Counters allow custom tags per occurrence
   def inc(customTagValues: String*) = client.incrementCounter(constructMetricString(1, customTagValues))
 
-  def incBy(delta: Long, customTagValues: String*) = client.count(constructMetricString(1, customTagValues), delta)
+  def incBy(delta: Long, customTagValues: String*) = client.count(constructMetricString(delta, customTagValues), delta)
+}
+
+case class FlushingCounterMetric(name: String, baseTags: String, customTags: Seq[CustomTag], client: StatsDClient)(implicit flushSystem: ActorSystem)
+    extends Metric {
+  val actor = flushSystem.actorOf(Props(FlushingCounterActor(this)))
+
+  def inc(customTagValues: String*)                = actor ! FlushingCounterMeasurement(customTagValues, 1)
+  def incBy(delta: Long, customTagValues: String*) = actor ! FlushingCounterMeasurement(customTagValues, delta)
+}
+object FlushingCounterActor {
+  case class FlushingCounterMeasurement(customTagValues: Seq[String], delta: Long)
+  object Flush
+}
+case class FlushingCounterActor(metric: FlushingCounterMetric) extends Actor {
+  // Important, the interval must be lower than the configured statsd flush interval (curr. 10s), or we see weird metric behaviour.
+  import context.dispatcher
+  context.system.scheduler.schedule(0.seconds, 5.seconds, self, Flush)
+
+  override def receive = statefulReceive(emptyState)
+
+  def statefulReceive(state: mutable.Map[Seq[String], Long]): Receive = {
+    case Flush =>
+      flush(state)
+      context.become(statefulReceive(emptyState))
+
+    case FlushingCounterMeasurement(customTagValues, delta) =>
+      val currentValue: Long = state.getOrElse(customTagValues, 0)
+      state.update(customTagValues, currentValue + delta)
+  }
+
+  def flush(state: mutable.Map[Seq[String], Long]) = {
+    state.foreach {
+      case (customTagValues, delta) =>
+        val metricsString = metric.constructMetricString(delta, customTagValues)
+        println(s"$metricsString : $delta")
+        metric.client.count(metricsString, delta)
+    }
+  }
+
+  def emptyState = mutable.Map.empty[Seq[String], Long]
 }
 
 /**

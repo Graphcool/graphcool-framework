@@ -65,6 +65,7 @@ trait MetricsManager {
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
   def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(s"$serviceName.$name", baseTagsString, predefTags, client)
   def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = CounterMetric(s"$serviceName.$name", baseTagsString, customTags, client)
+  def defineFlushingCounter(name: String, customTags: CustomTag*)              = FlushingCounterMetric(s"$serviceName.$name", baseTagsString, customTags, client)
   def defineTimer(name: String, customTags: CustomTag*): TimerMetric           = TimerMetric(s"$serviceName.$name", baseTagsString, customTags, client)
 
   def shutdown: Unit = Await.result(gaugeFlushSystem.terminate(), 10.seconds)
