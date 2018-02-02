@@ -58,86 +58,65 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
     }
 
     // for every group, further break them down by their arguments
-    val manyModelDeferredsMap = DeferredUtils
-      .groupModelDeferred[ManyModelDeferred[ConnectionOutputType]](manyModelDeferreds)
-
-    val manyModelExistsDeferredsMap = DeferredUtils
-      .groupModelExistsDeferred[ManyModelExistsDeferred](manyModelExistsDeferreds)
-
-    val countManyModelDeferredsMap = DeferredUtils
-      .groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
-
-    val toManyDeferredsMap =
-      DeferredUtils.groupRelatedDeferred[ToManyDeferred[ConnectionOutputType]](toManyDeferreds)
-
-    val countToManyDeferredsMap =
-      DeferredUtils.groupRelatedDeferred[CountToManyDeferred](countToManyDeferreds)
-
-    val toOneDeferredMap =
-      DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
-
-    val checkScalarFieldPermissionsDeferredsMap =
-      DeferredUtils.groupPermissionDeferred(checkScalarFieldPermissionsDeferreds)
+    val manyModelDeferredsMap                   = DeferredUtils.groupModelDeferred[ManyModelDeferred[ConnectionOutputType]](manyModelDeferreds)
+    val manyModelExistsDeferredsMap             = DeferredUtils.groupModelExistsDeferred[ManyModelExistsDeferred](manyModelExistsDeferreds)
+    val countManyModelDeferredsMap              = DeferredUtils.groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
+    val toManyDeferredsMap                      = DeferredUtils.groupRelatedDeferred[ToManyDeferred[ConnectionOutputType]](toManyDeferreds)
+    val countToManyDeferredsMap                 = DeferredUtils.groupRelatedDeferred[CountToManyDeferred](countToManyDeferreds)
+    val toOneDeferredMap                        = DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
+    val checkScalarFieldPermissionsDeferredsMap = DeferredUtils.groupPermissionDeferred(checkScalarFieldPermissionsDeferreds)
 
     // for every group of deferreds, resolve them
     val manyModelFutureResults = manyModelDeferredsMap
       .map {
-        case (key, value) =>
-          manyModelDeferredResolver.resolve(value, ctx.dataResolver)
+        case (_, value) => manyModelDeferredResolver.resolve(value, ctx.dataResolver)
       }
       .toVector
       .flatten
 
     val manyModelExistsFutureResults = manyModelExistsDeferredsMap
       .map {
-        case (key, value) =>
-          new ManyModelExistsDeferredResolver().resolve(value, ctx.dataResolver)
+        case (_, value) => new ManyModelExistsDeferredResolver().resolve(value, ctx.dataResolver)
       }
       .toVector
       .flatten
 
     val countManyModelFutureResults = countManyModelDeferredsMap
       .map {
-        case (key, value) =>
-          new CountManyModelDeferredResolver().resolve(value, ctx.dataResolver)
+        case (_, value) => new CountManyModelDeferredResolver().resolve(value, ctx.dataResolver)
       }
       .toVector
       .flatten
 
     val toManyFutureResults = toManyDeferredsMap
       .map {
-        case (key, value) =>
-          toManyDeferredResolver.resolve(value, ctx.dataResolver)
+        case (_, value) => toManyDeferredResolver.resolve(value, ctx.dataResolver)
       }
       .toVector
       .flatten
 
     val countToManyFutureResults = countToManyDeferredsMap
       .map {
-        case (key, value) =>
-          new CountToManyDeferredResolver().resolve(value, ctx.dataResolver)
+        case (_, value) => new CountToManyDeferredResolver().resolve(value, ctx.dataResolver)
       }
       .toVector
       .flatten
 
     val toOneFutureResults = toOneDeferredMap
       .map {
-        case (key, value) =>
-          new ToOneDeferredResolver().resolve(value, ctx.dataResolver)
+        case (_, value) => new ToOneDeferredResolver().resolve(value, ctx.dataResolver)
       }
       .toVector
       .flatten
 
     val begin = System.currentTimeMillis()
 
-    val checkScalarFieldPermissionsFutureResults =
-      checkScalarFieldPermissionsDeferredsMap
-        .map {
-          case (key, value) =>
-            checkScalarFieldPermissionsDeferredResolver.resolve(value, ctx.dataResolver)
-        }
-        .toVector
-        .flatten
+    val checkScalarFieldPermissionsFutureResults = checkScalarFieldPermissionsDeferredsMap
+      .map {
+        case (_, value) => checkScalarFieldPermissionsDeferredResolver.resolve(value, ctx.dataResolver)
+      }
+      .toVector
+      .flatten
 
     Future.sequence(checkScalarFieldPermissionsFutureResults.map(_.future)).onComplete { _ =>
       val duration = System.currentTimeMillis() - begin
