@@ -20,4 +20,6 @@ object ClientSharedMetrics extends MetricsManager {
   val projectCacheGetCount          = defineCounter("projectCacheGetCount")
   val projectCacheMissCount         = defineCounter("projectCacheMissCount")
   val sqlDataChangeMutactionTimer   = defineTimer("sqlDataChangeMutactionTimer", CustomTag("projectId", recordingThreshold = 1000))
+  val queryPermissionCounter        = defineFlushingCounter("queryPermissionsCounter", CustomTag("projectId", recordingThreshold = 50))
+  val permissionCheckingTimer       = defineTimer("permissionCheckingTimer", CustomTag("projectId", recordingThreshold = 500))
 }
