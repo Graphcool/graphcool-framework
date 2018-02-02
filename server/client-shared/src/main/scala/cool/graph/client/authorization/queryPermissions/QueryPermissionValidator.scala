@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
 import cool.graph.client.{ClientInjector, UserContext}
+import cool.graph.metrics.ClientSharedMetrics
 import cool.graph.shared.errors.UserAPIErrors.InsufficientPermissions
 import cool.graph.shared.models.{AuthenticatedRequest, Project}
 import cool.graph.shared.queryPermissions.PermissionSchemaResolver
@@ -45,6 +46,7 @@ class QueryPermissionValidator(project: Project)(implicit injector: ClientInject
       authenticatedRequest: Option[AuthenticatedRequest],
       alwaysQueryMasterDatabase: Boolean
   ): Future[Boolean] = {
+    ClientSharedMetrics.queryPermissionCounter.inc(project.id)
     val context = new UserContext(
       project = project,
       authenticatedRequest = authenticatedRequest,
