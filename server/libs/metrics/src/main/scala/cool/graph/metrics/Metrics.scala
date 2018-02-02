@@ -100,7 +100,6 @@ case class FlushingCounterActor(metric: FlushingCounterMetric) extends Actor {
     state.foreach {
       case (customTagValues, delta) =>
         val metricsString = metric.constructMetricString(delta, customTagValues)
-        println(s"$metricsString : $delta")
         metric.client.count(metricsString, delta)
     }
   }

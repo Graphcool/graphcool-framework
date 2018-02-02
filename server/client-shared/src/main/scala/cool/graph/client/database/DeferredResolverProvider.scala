@@ -157,7 +157,6 @@ class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolv
     Future.sequence(checkScalarFieldPermissionsFutureResults.map(_.future)).onComplete { _ =>
       val duration = System.currentTimeMillis() - begin
       if (duration > 10) {
-        println(s"permission checking took: $duration ms")
         ClientSharedMetrics.permissionCheckingTimer.record(duration, Seq(ctx.dataResolver.project.id))
       }
     }
