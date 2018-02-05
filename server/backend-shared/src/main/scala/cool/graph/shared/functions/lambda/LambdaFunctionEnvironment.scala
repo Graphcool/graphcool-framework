@@ -2,7 +2,7 @@ package cool.graph.shared.functions.lambda
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.{CompletableFuture, CompletionException}
+import java.util.concurrent.{CompletableFuture, CompletionException, Semaphore}
 
 import com.amazonaws.HttpMethod
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
@@ -26,7 +26,7 @@ import spray.json.{JsArray, JsObject, JsString}
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Random
+import scala.util.{Random, Try}
 import scalaj.http.Base64
 
 object LambdaFunctionEnvironment {
@@ -55,6 +55,8 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   private def accountForId(accountId: Option[String]): LambdaDeploymentAccount =
     idsToAccounts.getOrElse(accountId.getOrElse("default"), sys.error(s"Account $accountId not configured."))
 
+  val maxRequestsSemaphore = new Semaphore(10)
+
   // Picks a random account for new function deployments, ignoring disabled account
   override def pickDeploymentAccount(): Option[String] = {
     Random.shuffle(accounts.filter(_.deploymentEnabled)).headOption.map(_.id)
@@ -73,6 +75,20 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   }
 
   def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
+    maxRequestsSemaphore.acquire()
+
+    try {
+      val result = deployInternal(project, externalFile, name)
+      result.onComplete(_ => maxRequestsSemaphore.release())
+      result
+    } catch {
+      case e: Throwable =>
+        maxRequestsSemaphore.release()
+        throw e
+    }
+  }
+
+  def deployInternal(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
     val key     = externalFile.url.split("\\?").head.split("/").last
     val account = accountForId(project.nextFunctionDeploymentAccount)
 
