@@ -20,16 +20,17 @@ class CheckScalarFieldPermissionsDeferredResolver(skipPermissionCheck: Boolean, 
 
   def resolve(orderedDefereds: Vector[OrderedDeferred[CheckPermissionDeferred]], ctx: DataResolver): Vector[OrderedDeferredFutureResult[Any]] = {
     val deferreds = orderedDefereds.map(_.deferred)
+    if (skipPermissionCheck) {
+      return orderedDefereds.map(x => OrderedDeferredFutureResult[Any](Future.successful(x.deferred.value), x.order))
+    }
+    if (deferreds.head.authenticatedRequest.exists(_.isAdmin)) {
+      return orderedDefereds.map(x => OrderedDeferredFutureResult[Any](Future.successful(x.deferred.value), x.order))
+    }
 
     // check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfPermissionDeferredsAndThrow(deferreds)
 
-    if (skipPermissionCheck) {
-      return orderedDefereds.map(x => OrderedDeferredFutureResult[Any](Future.successful(x.deferred.value), x.order))
-    }
-
-    val headDeferred = deferreds.head
-
+    val headDeferred           = deferreds.head
     val model                  = headDeferred.model
     val authenticatedRequest   = headDeferred.authenticatedRequest
     val fieldsToCover          = orderedDefereds.map(_.deferred.field).distinct
