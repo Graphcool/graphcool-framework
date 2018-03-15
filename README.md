@@ -148,16 +148,16 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ### Service examples
 
-* [auth](examples/auth): Email/password-based authentication
-* [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
+* [auth](examples/0.x/auth): Email/password-based authentication
+* [crud-api](examples/0.x/crud-api): Simple CRUD-style GraphQL API
 * [env-variables-in-functions](examples/env-variables-in-functions): Function accessing environment variables
-* [full-example](examples/full-example): Full example (webshop) demoing most available features
-* [typescript-gateway-custom-schema](examples/typescript-gateway-custom-schema): Define a custom schema using an API gateway
-* [graphcool-lib](examples/graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
-* [permissions](examples/permissions): Configure permission rules
-* [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
-* [subscriptions](examples/subscriptions): Use subscription functions to react to asynchronous events
-* [yaml-variables](examples/yaml-variables): Use variables in your `graphcool.yml`
+* [full-example](examples/0.x/full-example): Full example (webshop) demoing most available features
+* [typescript-gateway-custom-schema](examples/0.x/typescript-gateway-custom-schema): Define a custom schema using an API gateway
+* [graphcool-lib](examples/0.x/graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
+* [permissions](examples/0.x/permissions): Configure permission rules
+* [rest-wrapper](examples/0.x/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
+* [subscriptions](examples/0.x/subscriptions): Use subscription functions to react to asynchronous events
+* [yaml-variables](examples/0.x/yaml-variables): Use variables in your `graphcool.yml`
 
 ### Frontend examples
 
