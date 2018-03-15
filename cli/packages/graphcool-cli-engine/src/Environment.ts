@@ -122,8 +122,9 @@ Please run ${chalk.green(
 
     if (targetName && targetName.split('/').length > 1) {
       target = this.deserializeTarget(targetName)
+    } else {
+      target = targetName || (this.rc.targets && this.rc.targets.default)
     }
-    target = targetName || (this.rc.targets && this.rc.targets.default)
 
     if (typeof target === 'string' && this.rc.targets) {
       target = this.rc.targets[target]
