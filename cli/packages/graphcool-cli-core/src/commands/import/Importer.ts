@@ -4,7 +4,7 @@ import { Client, Output, Config } from 'graphcool-cli-engine'
 import * as globby from 'globby'
 import { Validator } from './Validator'
 import chalk from 'chalk'
-import * as unzip from 'unzip'
+import * as unzip from 'unzip-stream'
 
 export interface Files {
   lists: string[]

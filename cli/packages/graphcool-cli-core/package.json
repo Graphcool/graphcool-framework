@@ -2,7 +2,9 @@
   "name": "graphcool-cli-core",
   "version": "1.10.10-framework",
   "main": "dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
   "license": "Apache-2.0",
@@ -28,12 +30,10 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "build":
-      "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker && cp -r src/commands/deploy/Bundler/proxies dist/commands/deploy/Bundler/proxies",
+    "build": "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker && cp -r src/commands/deploy/Bundler/proxies dist/commands/deploy/Bundler/proxies",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
-    "prettier":
-      "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build",
     "test": "NODE_ENV=test jest"
   },
@@ -49,13 +49,23 @@
     "gitDir": "../../../"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "rootDir": "./src",
     "transform": {
       "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": ["**/*.test.(ts|js)"],
-    "setupFiles": ["../test/init.js"],
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "setupFiles": [
+      "../test/init.js"
+    ],
     "globals": {
       "ts-jest": {
         "tsConfigFile": "./tsconfig.json"
@@ -93,7 +103,7 @@
     "through2": "^2.0.3",
     "ts-node": "^3.3.0",
     "typescript": "^2.5.3",
-    "unzip": "^0.1.11",
+    "unzip-stream": "^0.3.0",
     "validator": "^8.2.0",
     "yauzl": "^2.9.1"
   }
