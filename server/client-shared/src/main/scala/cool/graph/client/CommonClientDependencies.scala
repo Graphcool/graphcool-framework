@@ -91,7 +91,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
-  lazy val maxImportExportSize: Int                     = 10000000
+  lazy val maxImportExportSize: Int                     = 1000000
 
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
