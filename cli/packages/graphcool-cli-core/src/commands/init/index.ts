@@ -115,10 +115,12 @@ To force the init process in this folder, use ${chalk.green(
     this.out.action.stop()
 
     this.out.log(`${chalk.dim.bold('\nWritten files' + ':')}`)
-    fs.writeFileSync(
-      path.join(this.config.definitionDir, 'package.json'),
-      JSON.stringify(pjson, null, 2),
-    )
+    if (!fs.accessSync(path.join(this.config.definitionDir, 'package.json')) {
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'package.json'),
+        JSON.stringify(pjson, null, 2),
+      )
+    }
     const createdFiles = flatten(
       this.definition.definition!.modules.map(module =>
         Object.keys(module.files),
