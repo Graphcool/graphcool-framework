@@ -57,13 +57,14 @@ graphcool deploy [flags]
 
 ```
  -a, --alias ALIAS                                Service alias
- -d, --default                                    Set specified target as default
- -D, --dry-run                                    Perform dry-run of deployment to view changes
+ -D, --default                                    Set specified target as default
+ -d, --dry-run                                    Perform a dry-run of the deployment
  -f, --force                                      Accept data loss caused by schema changes
  -i, --interactive                                Force interactive mode to select the cluster
+ -j, --json                                       Json Output
  -n, --new-service NEW-SERVICE                    Name of the new Service
  -c, --new-service-cluster NEW-SERVICE-CLUSTER    Name of the Cluster to deploy to
- -t, --target TARGET                              Target name
+ -t, --target TARGET                              Local target, ID or alias of service to deploy
  -w, --watch                                      Watch for changes
 ```
 
