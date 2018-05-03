@@ -237,6 +237,7 @@ lazy val backendApiSimpleSubscriptions =
     .settings(commonBackendSettings: _*)
     .settings(libraryDependencies ++= Dependencies.apiServer)
     .settings(libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http"           % "10.0.5",
       "com.typesafe.play" %% "play-json"           % "2.5.12",
       "de.heikoseeberger" %% "akka-http-play-json" % "1.14.0" excludeAll (
         ExclusionRule(organization = "com.typesafe.akka"),

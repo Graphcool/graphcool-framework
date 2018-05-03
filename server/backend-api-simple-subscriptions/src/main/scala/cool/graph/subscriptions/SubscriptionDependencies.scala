@@ -29,13 +29,14 @@ import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{Schema
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCallerImplementation}
 import play.api.libs.json.Json
+import akka.http.scaladsl.server.Directive0
+import akka.http.scaladsl.server.Directives.pass
 import scaldi._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 trait SimpleSubscriptionInjector extends ClientInjector {
-
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   val sssEventsSubscriber: PubSubSubscriber[String]
   val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
@@ -168,6 +169,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val maxImportExportSize: Int                     = 10000000
+  lazy val projectRouteHook: String => Directive0       = (_: String) => pass
 
   def parseLambdaAccounts(raw: String): Vector[LambdaDeploymentAccount] = {
     import LambdaDeploymentAccount._

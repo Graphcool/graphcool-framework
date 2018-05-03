@@ -37,10 +37,10 @@ case class ClientServer(prefix: String)(
   val log: String => Unit                             = (x: String) => logger.info(x)
   val errorHandlerFactory: ErrorHandlerFactory        = injector.errorHandlerFactory
   val projectSchemaFetcher: RefreshableProjectFetcher = injector.projectSchemaFetcher
-
-  val clientAuth: ClientAuth = injector.clientAuth
-  val requestPrefix: String  = injector.requestPrefix
-  val requestIdPrefix        = s"$requestPrefix:$prefix"
+  val projectRouteHook: String => Directive0          = injector.projectRouteHook
+  val clientAuth: ClientAuth                          = injector.clientAuth
+  val requestPrefix: String                           = injector.requestPrefix
+  val requestIdPrefix                                 = s"$requestPrefix:$prefix"
 
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 
@@ -50,36 +50,38 @@ case class ClientServer(prefix: String)(
     handleExceptions(toplevelExceptionHandler(requestLogger.requestId)) {
       PrivateClientApi().privateRoute ~ pathPrefix("v1") {
         pathPrefix(Segment) { projectId =>
-          get {
-            path("schema.json") {
-              complete(requestHandler.handleIntrospectionQuery(projectId, requestLogger))
-            } ~ {
-              getFromResource("graphiql.html")
-            }
-          } ~
-            post {
-              path("permissions") {
-                extractRawRequest(requestLogger) { rawRequest =>
-                  complete(requestHandler.handleRawRequestForPermissionSchema(projectId = projectId, rawRequest = rawRequest))
-                }
-              } ~
-                path("import") {
+          projectRouteHook(projectId) {
+            get {
+              path("schema.json") {
+                complete(requestHandler.handleIntrospectionQuery(projectId, requestLogger))
+              } ~ {
+                getFromResource("graphiql.html")
+              }
+            } ~
+              post {
+                path("permissions") {
                   extractRawRequest(requestLogger) { rawRequest =>
-                    complete(requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest))
+                    complete(requestHandler.handleRawRequestForPermissionSchema(projectId = projectId, rawRequest = rawRequest))
                   }
                 } ~
-                path("export") {
+                  path("import") {
+                    extractRawRequest(requestLogger) { rawRequest =>
+                      complete(requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest))
+                    }
+                  } ~
+                  path("export") {
+                    extractRawRequest(requestLogger) { rawRequest =>
+                      complete(requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest))
+                    }
+                  } ~ {
                   extractRawRequest(requestLogger) { rawRequest =>
-                    complete(requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest))
-                  }
-                } ~ {
-                extractRawRequest(requestLogger) { rawRequest =>
-                  timeoutHandler(requestId = rawRequest.id, projectId = projectId) {
-                    complete(requestHandler.handleRawRequestForProjectSchema(projectId = projectId, rawRequest = rawRequest))
+                    timeoutHandler(requestId = rawRequest.id, projectId = projectId) {
+                      complete(requestHandler.handleRawRequestForProjectSchema(projectId = projectId, rawRequest = rawRequest))
+                    }
                   }
                 }
               }
-            }
+          }
         }
       }
     }
