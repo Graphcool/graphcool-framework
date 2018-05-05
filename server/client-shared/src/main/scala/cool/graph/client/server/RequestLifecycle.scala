@@ -84,7 +84,6 @@ case class GraphQlRequest(
   override val sourceHeader: Option[String] = rawRequest.sourceHeader
   val id: String                            = logger.requestId
   val project: Project                      = projectWithClientId.project
-
 }
 
 case class GraphQlQuery(

@@ -1,6 +1,8 @@
 package cool.graph.client
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.http.scaladsl.server.Directive0
+import akka.http.scaladsl.server.Directives.pass
 import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
@@ -40,6 +42,7 @@ trait ClientInjector {
 
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
   val projectSchemaFetcher: RefreshableProjectFetcher
+  val projectRouteHook: (String) => Directive0
   val functionEnvironment: FunctionEnvironment
   val endpointResolver: EndpointResolver
   val logsPublisher: QueuePublisher[String]
@@ -92,6 +95,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val maxImportExportSize: Int                     = 1000000
+  lazy val projectRouteHook: String => Directive0       = (_: String) => pass
 
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
