@@ -5,8 +5,6 @@ import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.{Routes, Server}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.worker.services.WorkerServices
-import cool.graph.worker.workers.{FunctionLogsWorker, WebhookDelivererWorker, Worker}
-
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -14,11 +12,7 @@ case class WorkerServer(services: WorkerServices, prefix: String = "")(implicit 
     extends Server {
   import system.dispatcher
 
-  val workers = Vector[Worker](
-    FunctionLogsWorker(services.logsDb, services.logsQueue),
-    WebhookDelivererWorker(services.httpClient, services.webhooksConsumer, services.logsQueue)
-  )
-
+  val workers     = services.workers
   val innerRoutes = Routes.emptyRoute
 
   override def onStart: Future[_] = {
