@@ -67,6 +67,7 @@ Signup as a new user and copy both the `id` and `token` for later use.
 ```graphql
 mutation signup {
   signupUser(
+    name: "nilan"
     email: "nilan@graph.cool"
     password: "password"
   ) {
