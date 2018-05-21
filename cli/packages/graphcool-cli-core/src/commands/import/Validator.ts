@@ -59,14 +59,7 @@ export class Validator {
         )
       )
     },
-    Json: (str) => {
-      try {
-          JSON.parse(str);
-      } catch (e) {
-          return false;
-      }
-      return true;
-    },
+    Json: () => true,
     Boolean: isBoolean,
   }
   constructor(typesString: string) {
