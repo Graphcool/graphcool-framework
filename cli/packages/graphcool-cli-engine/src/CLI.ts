@@ -146,7 +146,7 @@ export class CLI {
       )
     ) {
       const { timeout } = require('./util')
-      await timeout(this.flush(), 1000)
+      await timeout(this.flush(), 2000)
 
       out.exit(0)
     } else {
