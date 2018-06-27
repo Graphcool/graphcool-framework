@@ -43,8 +43,13 @@ export class Importer {
       throw new Error(`Import path ${importPath} does not exist`)
     }
     this.config = config
-    this.importPath = importPath
-    this.importDir = path.join(config.cwd, '.import/')
+    if (importPath.endsWith('.zip')) {
+      this.importPath = importPath
+      this.importDir = path.resolve(config.cwd, '.import/')
+    }
+    else {
+      this.importDir = path.resolve(config.cwd, importPath)
+    }
     this.client = client
     this.types = types
     this.out = out
@@ -88,7 +93,9 @@ export class Importer {
     })
   }
   async upload(projectId: string) {
-    await this.unzip()
+    if (this.importPath) {
+      await this.unzip()
+    }
     let before = Date.now()
     this.out.action.start('Validating data')
     const files = await this.getFiles()
