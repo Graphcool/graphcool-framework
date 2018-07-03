@@ -246,7 +246,7 @@ In addition to the `User` that you got from the `facebook` authentication templa
 Open `./graphcool/types.graphql` and add the following definition to it:
 
 ```graphql(path="server/types.graphql")
-type Post {
+type Post @model {
   # Required system field:
   id: ID! @isUnique # read-only (managed by Graphcool)
 
@@ -282,7 +282,7 @@ type User @model {
   facebookEmail: String
   
   # custom fields
-  posts: [Post!]! @relation(name: "PostsByUser")
+  posts: [Post!]! @relation(name: "UsersPosts")
 }
 ```
 
