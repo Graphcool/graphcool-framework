@@ -80,11 +80,10 @@ sealed trait Function {
   def binding: FunctionBinding
   def input: List[InterfaceField]
   def output: List[InterfaceField]
-
   def install(config: InstallConfiguration): AppliedFunction
 }
-case class InlineFunction(script: String, name: String, binding: FunctionBinding, input: List[InterfaceField], output: List[InterfaceField]) extends Function {
 
+case class InlineFunction(script: String, name: String, binding: FunctionBinding, input: List[InterfaceField], output: List[InterfaceField]) extends Function {
   def install(config: InstallConfiguration): AppliedInlineFunction = {
     AppliedInlineFunction(
       script = script,
@@ -114,16 +113,13 @@ case class ServerlessFunction(name: String, binding: FunctionBinding, input: Lis
   * INSTALLED PACKAGE
   */
 case class InstalledPackage(originalPackage: Option[Package], interfaces: List[AppliedInterface], functions: List[AppliedFunction]) {
-
   def function(binding: FunctionBinding): List[AppliedFunction] = functions.filter(_.binding == binding)
-
-  def interfacesFor(model: Model): List[AppliedInterface] = interfaces.filter(_.model.name == model.name)
+  def interfacesFor(model: Model): List[AppliedInterface]       = interfaces.filter(_.model.name == model.name)
 }
 
 case class AppliedInterface(name: String, model: Model, originalInterface: Option[Interface], fields: List[AppliedInterfaceField])
 
 case class AppliedInterfaceField(name: String, originalInterfaceField: InterfaceField) {
-
   def typeIdentifier: TypeIdentifier = originalInterfaceField.typeIdentifier
   def description: String            = originalInterfaceField.description
   def isUnique: Boolean              = originalInterfaceField.isUnique

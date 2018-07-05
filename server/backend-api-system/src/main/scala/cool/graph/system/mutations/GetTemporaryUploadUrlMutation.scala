@@ -20,7 +20,7 @@ case class GetTemporaryUploadUrlMutation(
 
   val projectQueries: ProjectQueries = inject[ProjectQueries](identified by "projectQueries")
   val functionEnvironment            = inject[FunctionEnvironment]
-  val deploymentAccount              = functionEnvironment.pickDeploymentAccount()
+  val deploymentAccount              = pickDeploymentAccount()
   val updatedProject                 = project.copy(nextFunctionDeploymentAccount = deploymentAccount)
 
   override def prepareActions(): List[Mutaction] = {
@@ -37,6 +37,18 @@ case class GetTemporaryUploadUrlMutation(
 
     actions = actions ++ mutactions
     actions
+  }
+
+  private def pickDeploymentAccount(): Option[String] = {
+    if (project.isEjected) {
+      (project.activeFunctionDeploymentAccount, project.nextFunctionDeploymentAccount) match {
+        case x @ (Some(_), _) => x._1
+        case x @ (_, Some(_)) => x._2
+        case _                => functionEnvironment.pickDeploymentAccount()
+      }
+    } else {
+      functionEnvironment.pickDeploymentAccount()
+    }
   }
 
   override def getReturnValue: Option[GetTemporaryDeployUrlPayload] = {

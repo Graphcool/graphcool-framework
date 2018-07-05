@@ -53,7 +53,6 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     function.delivery match {
       // Lambda and Dev function environment
-
       case delivery: models.ManagedFunction =>
         functionEnvironment.invoke(project, function.name, event) flatMap {
           case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
