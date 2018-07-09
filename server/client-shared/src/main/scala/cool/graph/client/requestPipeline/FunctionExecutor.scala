@@ -53,14 +53,10 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     function.delivery match {
       // Lambda and Dev function environment
+      case _: models.ManagedFunction => invoke(project, function, event)
+      case _: models.Auth0Function   => invoke(project, function, event)
 
-      case delivery: models.ManagedFunction =>
-        functionEnvironment.invoke(project, function.name, event) flatMap {
-          case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
-          case InvokeFailure(exception) => Future.successful(Bad(FunctionReturnedBadStatus(0, exception.getMessage)))
-        }
-
-      // Auth0Extend and Webhooks
+      // Webhooks
       case delivery: models.HttpFunction =>
         val headers = delivery.headers.toImmutable
         val uri     = function.delivery.asInstanceOf[HttpFunction].url
@@ -80,8 +76,24 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
             // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
             case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(uri))
           }
+
       case _ =>
         sys.error("only knows how to execute HttpFunctions")
+    }
+  }
+
+  def invoke(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
+    functionEnvironment.invoke(project, invocationName(project, function), event) flatMap {
+      case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
+      case InvokeFailure(exception) => Future.successful(Bad(FunctionReturnedBadStatus(0, exception.getMessage)))
+    }
+  }
+
+  def invocationName(project: Project, function: Function): String = {
+    if (!project.isEjected) {
+      function.name
+    } else {
+      function.id
     }
   }
 

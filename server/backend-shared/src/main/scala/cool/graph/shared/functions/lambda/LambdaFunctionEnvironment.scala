@@ -57,7 +57,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
 
   val maxRequestsSemaphore = new Semaphore(10)
 
-  // Picks a random account for new function deployments, ignoring disabled account
+  // Picks a random account for new function deployments, ignoring disabled accounts
   override def pickDeploymentAccount(): Option[String] = {
     Random.shuffle(accounts.filter(_.deploymentEnabled)).headOption.map(_.id)
   }
@@ -91,6 +91,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   def deployInternal(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
     val key     = externalFile.url.split("\\?").head.split("/").last
     val account = accountForId(project.nextFunctionDeploymentAccount)
+    val runtime = if (project.isEjected) "nodejs8.10" else Runtime.NODEJS6_10.toString
 
     def create =
       account
@@ -103,7 +104,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
             .role(account.deployIamArn)
             .timeout(15)
             .memorySize(512)
-            .runtime(Runtime.Nodejs610)
+            .runtime(runtime)
             .build())
         .toScala
         .map(_ => DeploySuccess())
@@ -148,8 +149,8 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
       .invoke(
         InvokeRequest.builder
           .functionName(lambdaFunctionName(project, name))
-          .invocationType(InvocationType.RequestResponse)
-          .logType(LogType.Tail) // return last 4kb of function logs
+          .invocationType(InvocationType.REQUEST_RESPONSE)
+          .logType(LogType.TAIL) // return last 4kb of function logs
           .payload(ByteBuffer.wrap(event.getBytes("utf-8")))
           .build()
       )
