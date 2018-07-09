@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import cool.graph.cuid.Cuid
 import cool.graph.shared.functions._
 import cool.graph.shared.models.Project
+import scalaj.http.Base64
 import software.amazon.awssdk.services.lambda.model.{
   CreateFunctionRequest,
   FunctionCode,
@@ -26,8 +27,7 @@ import spray.json.{JsArray, JsObject, JsString}
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Random, Try}
-import scalaj.http.Base64
+import scala.util.Random
 
 object LambdaFunctionEnvironment {
   def parseLambdaLogs(logs: String): Vector[JsObject] = {
@@ -91,7 +91,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   def deployInternal(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
     val key     = externalFile.url.split("\\?").head.split("/").last
     val account = accountForId(project.nextFunctionDeploymentAccount)
-    val runtime = if (project.isEjected) "nodejs8.10" else Runtime.NODEJS6_10.toString
+    val runtime = if (project.isEjected) "nodejs8.10" else Runtime.Nodejs610.toString
 
     def create =
       account
@@ -149,8 +149,8 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
       .invoke(
         InvokeRequest.builder
           .functionName(lambdaFunctionName(project, name))
-          .invocationType(InvocationType.REQUEST_RESPONSE)
-          .logType(LogType.TAIL) // return last 4kb of function logs
+          .invocationType(InvocationType.RequestResponse)
+          .logType(LogType.Tail) // return last 4kb of function logs
           .payload(ByteBuffer.wrap(event.getBytes("utf-8")))
           .build()
       )

@@ -5,7 +5,7 @@ import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import cool.graph.shared.models.Project
 import play.api.libs.json.Json
-import software.amazon.awssdk.auth.credentials.{AwsCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.auth.{AwsCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.lambda.LambdaAsyncClient
 
@@ -22,7 +22,7 @@ case class LambdaDeploymentAccount(
     deploymentEnabled: Boolean,
     deploymentBuckets: Vector[LambdaDeploymentBucket]
 ) {
-  lazy val credentialsProvider = StaticCredentialsProvider.create(AwsCredentials.create(accessKeyID, accessKey))
+  lazy val credentialsProvider = new StaticCredentialsProvider(new AwsCredentials(accessKeyID, accessKey))
   lazy val s3Credentials       = new BasicAWSCredentials(accessKeyID, accessKey)
 
   def bucket(project: Project): String = {
