@@ -91,7 +91,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   def deployInternal(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
     val key     = externalFile.url.split("\\?").head.split("/").last
     val account = accountForId(project.nextFunctionDeploymentAccount)
-    val runtime = if (project.isEjected) "nodejs8.10" else Runtime.Nodejs610.toString
+    val runtime = if (!project.isEjected) "nodejs8.10" else Runtime.Nodejs610.toString
 
     def create =
       account
@@ -142,7 +142,11 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   }
 
   def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
-    val account = accountForId(project.activeFunctionDeploymentAccount)
+    val account = if (project.isEjected) {
+      accountForId(project.activeFunctionDeploymentAccount)
+    } else {
+      accountForId(project.nextFunctionDeploymentAccount)
+    }
 
     account
       .lambdaClient(project)
