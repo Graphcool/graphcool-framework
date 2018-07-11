@@ -9,6 +9,7 @@ object URLValidation {
     input match {
       case None =>
         throw UserAPIErrors.InvalidValue("Url")
+
       case Some(url) =>
         try {
           val trimmedString = url.trim

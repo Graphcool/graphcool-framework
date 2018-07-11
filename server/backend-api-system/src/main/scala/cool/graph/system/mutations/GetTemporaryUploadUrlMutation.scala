@@ -40,7 +40,7 @@ case class GetTemporaryUploadUrlMutation(
   }
 
   private def pickDeploymentAccount(): Option[String] = {
-    if (project.isEjected) {
+    if (!project.isEjected) {
       (project.activeFunctionDeploymentAccount, project.nextFunctionDeploymentAccount) match {
         case x @ (Some(_), _) => x._1
         case x @ (_, Some(_)) => x._2
