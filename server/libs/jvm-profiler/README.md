@@ -7,16 +7,16 @@
  
  Here's an how to use it inside a MetricsManager:
  ```
-import cool.graph.profiling.MemoryProfiler
+import cool.graph.profiling.JvmProfiler
 
 object MyMetrics extends MetricsManager {
   override def serviceName: String = "MyMetrics"
   
   // use defaults for timings
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
   
   // or use custom timings
   import scala.concurrent.duration._
-  MemoryProfiler.schedule(this, initialDelay = 10.seconds, interval = 2.seconds)
+  JvmProfiler.schedule(this, initialDelay = 10.seconds, interval = 2.seconds)
 }
 ```
