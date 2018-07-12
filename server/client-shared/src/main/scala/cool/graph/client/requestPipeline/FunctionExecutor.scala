@@ -90,10 +90,9 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
   }
 
   def invocationName(project: Project, function: Function): String = {
-    if (!project.isEjected) {
-      function.name
-    } else {
-      function.id
+    function.delivery match {
+      case x: Auth0Function => if (project.isEjected) { function.name } else { x.auth0Id }
+      case _                => function.name
     }
   }
 
