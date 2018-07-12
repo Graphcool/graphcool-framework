@@ -36,7 +36,7 @@ case class WorkerCloudServices()(implicit system: ActorSystem, materializer: Act
   }
 
   lazy val webhooksConsumer: QueueConsumer[Webhook] = RabbitQueue.consumer[Webhook](Env.clusterLocalRabbitUri, "webhooks")
-  lazy val logsQueue: RabbitQueue[LogItem]          = RabbitQueue[LogItem](Env.clusterLocalRabbitUri, "function-logs", LinearBackoff(5.seconds))
+  lazy val logsQueue: RabbitQueue[LogItem]          = RabbitQueue[LogItem](Env.clusterLocalRabbitUri, "function-logs", LinearBackoff(5.seconds), workerConcurrency = 12)
 
   lazy val workers = Vector[Worker](
     FunctionLogsWorker(logsDb, logsQueue),
