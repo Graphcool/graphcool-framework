@@ -548,4 +548,5 @@ object RequestPipelineErrors {
   case class DataDoesNotMatchPayloadType(functionName: String)
       extends RequestPipelineError(s"""The value of the data object did not match the specified payloadType for function: $functionName""", 5007)
 
+  case class FailedExecutionError(message: String) extends RequestPipelineError(message, 5008)
 }

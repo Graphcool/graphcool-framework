@@ -10,6 +10,7 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.functions._
 import cool.graph.shared.models.Project
 import scalaj.http.Base64
+import software.amazon.awssdk.services.lambda.model
 import software.amazon.awssdk.services.lambda.model.{
   CreateFunctionRequest,
   FunctionCode,
@@ -159,15 +160,19 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
           .build()
       )
       .toScala
-      .map(response =>
+      .map((response: model.InvokeResponse) =>
         if (response.statusCode() == 200) {
           val returnValue                = StandardCharsets.UTF_8.decode(response.payload()).toString
           val logMessage                 = Base64.decodeString(response.logResult())
           val logLines                   = LambdaFunctionEnvironment.parseLambdaLogs(logMessage)
           val returnValueWithLogEnvelope = s"""{"logs":${JsArray(logLines).compactPrint}, "response": $returnValue}"""
-          InvokeSuccess(returnValue = returnValueWithLogEnvelope)
+
+          response.functionError() match {
+            case "Handled" | "Unhandled" => InvokeFailure(new RuntimeException(returnValueWithLogEnvelope))
+            case _                       => InvokeSuccess(returnValueWithLogEnvelope)
+          }
         } else {
-          InvokeFailure(sys.error(s"statusCode was ${response.statusCode()}"))
+          InvokeFailure(new RuntimeException(s"statusCode was ${response.statusCode()}"))
       })
       .recover { case e: Throwable => InvokeFailure(e) }
   }

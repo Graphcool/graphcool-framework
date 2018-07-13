@@ -30,6 +30,7 @@ case class FunctionSuccess(values: FunctionDataValue, result: FunctionExecutionR
 case class FunctionDataValue(isNull: Boolean, values: Vector[JsObject])
 
 sealed trait FunctionError                                                 extends FunctionResult
+case class FunctionFailed(msg: String)                                     extends FunctionError
 case class FunctionReturnedBadStatus(statusCode: Int, rawResponse: String) extends FunctionError
 case class FunctionReturnedBadBody(badBody: String, parseError: String)    extends FunctionError
 case class FunctionWebhookURLNotValid(url: String)                         extends FunctionError
@@ -85,7 +86,7 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
   def invoke(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     functionEnvironment.invoke(project, invocationName(project, function), event) flatMap {
       case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
-      case InvokeFailure(exception) => Future.successful(Bad(FunctionReturnedBadStatus(0, exception.getMessage)))
+      case InvokeFailure(exception) => Future.successful(Bad(FunctionFailed(exception.getMessage)))
     }
   }
 
@@ -136,6 +137,9 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
         case Success(Bad(FunctionWebhookURLNotValid(url))) =>
           logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> s"Function called an invalid url: $url")))
 
+        case Success(Bad(FunctionFailed(msg))) =>
+          logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> s"Function invocation failed with: $msg")))
+
         case Success(Good(FunctionSuccess(values, result))) =>
           logsPublisher.publish(renderLogPayload("SUCCESS", Map("event" -> event, "logs" -> result.logs, "returnValue" -> result.returnValue)))
       })
@@ -148,6 +152,7 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
       case Bad(err: FunctionReturnValueParsingError)     => throw DataDoesNotMatchPayloadType(err.functionName)
       case Bad(_: FunctionWebhookURLNotValid)            => throw FunctionWebhookURLWasNotValid(executionId = requestId)
       case Bad(_: FunctionReturnedBadStatus)             => throw UnhandledFunctionError(executionId = requestId)
+      case Bad(FunctionFailed(msg))                      => throw FailedExecutionError(msg)
       case Bad(_: FunctionReturnedBadBody)               => throw FunctionReturnedInvalidBody(executionId = requestId)
       case Bad(FunctionReturnedStringError(errorMsg, _)) => throw FunctionReturnedErrorMessage(errorMsg)
       case Bad(FunctionReturnedJsonError(json, _))       => throw FunctionReturnedErrorObject(json)
