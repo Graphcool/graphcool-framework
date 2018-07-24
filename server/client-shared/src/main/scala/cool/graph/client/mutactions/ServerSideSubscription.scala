@@ -107,12 +107,12 @@ case class ServerSideSubscription(
           val json                      = event.compactPrint
 
           function.delivery match {
+            case _: ManagedFunction | _: Auth0Function =>
+              new FunctionExecutor().syncWithLoggingAndErrorHandling_!(function, json, project, requestId)
+
             case fn: HttpFunction =>
               val webhook = Webhook(project.id, function.id, requestId, fn.url, json, requestId, fn.headers.toMap)
               webhookPublisher.publish(webhook)
-
-            case fn: ManagedFunction =>
-              new FunctionExecutor().syncWithLoggingAndErrorHandling_!(function, json, project, requestId)
 
             case _ =>
           }

@@ -55,8 +55,11 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
     injector.onFunctionInvocation(project.id)
     function.delivery match {
       // Lambda and Dev function environment
-      case _: models.ManagedFunction => invoke(project, function, event)
-      case _: models.Auth0Function   => invoke(project, function, event)
+      case _: models.ManagedFunction | _: models.Auth0Function =>
+        functionEnvironment.invoke(project, invocationName(project, function), event) flatMap {
+          case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
+          case InvokeFailure(exception) => Future.successful(Bad(FunctionFailed(exception.getMessage)))
+        }
 
       // Webhooks
       case delivery: models.HttpFunction =>
@@ -81,13 +84,6 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
 
       case _ =>
         sys.error("only knows how to execute HttpFunctions")
-    }
-  }
-
-  def invoke(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
-    functionEnvironment.invoke(project, invocationName(project, function), event) flatMap {
-      case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
-      case InvokeFailure(exception) => Future.successful(Bad(FunctionFailed(exception.getMessage)))
     }
   }
 
