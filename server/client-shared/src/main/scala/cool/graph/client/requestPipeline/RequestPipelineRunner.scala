@@ -174,6 +174,7 @@ case class RpFunctionExecutor(requestId: String)(implicit injector: ClientInject
     )
 
     val event = AnyJsonFormat.write(argsAndContext).compactPrint
+    injector.onFunctionInvocation(project.id)
     functionExecutor.syncWithLoggingAndErrorHandling_!(function, event, project, requestId)
   }
 

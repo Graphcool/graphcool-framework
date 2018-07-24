@@ -57,10 +57,9 @@ case class ActionWebhookForDeleteDataItemAsync(model: Model, project: Project, n
 
       case None =>
         require(data.nonEmpty, "prepareData should be invoked and awaited before executing this mutaction")
-
+        injector.onFunctionInvocation(project.id)
         val webhookPublisher = injector.webhookPublisher
         webhookPublisher.publish(data.get)
-
         Future.successful(MutactionExecutionSuccess())
     }
   }

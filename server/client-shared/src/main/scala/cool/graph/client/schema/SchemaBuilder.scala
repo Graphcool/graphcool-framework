@@ -158,16 +158,13 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
   }
 
   def getCustomResolverField(function: SchemaExtensionFunction): Field[UserContext, Unit] = {
-
     def getResolve(payloadType: FreeType,
                    raw: Map[String, Any],
                    ctx: UserContext,
                    expPackageMutation: Option[AppliedFunction] = None): Future[FunctionDataItems] = {
-
       val args             = GraphcoolDataTypes.convertToJson(GraphcoolDataTypes.wrapSomes(raw))
       val endpointResolver = injector.endpointResolver
       val context          = FunctionExecutor.createEventContext(project, ctx.requestIp, headers = Map.empty, ctx.authenticatedRequest, endpointResolver)
-
       val argsAndContext = expPackageMutation match {
         case None =>
           Map(
@@ -181,10 +178,10 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
           )
       }
 
-      val event = AnyJsonFormat.write(argsAndContext).compactPrint
+      injector.onFunctionInvocation(project.id)
 
-      val functionExecutor = new FunctionExecutor()
-
+      val event                                            = AnyJsonFormat.write(argsAndContext).compactPrint
+      val functionExecutor                                 = new FunctionExecutor()
       val functionExecutionResult: Future[FunctionSuccess] = functionExecutor.syncWithLoggingAndErrorHandling_!(function, event, project, ctx.requestId)
 
       functionExecutionResult.map { res =>

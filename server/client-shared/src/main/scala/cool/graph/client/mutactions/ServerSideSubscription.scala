@@ -106,6 +106,7 @@ case class ServerSideSubscription(
           val event                     = JsObject(fields + ("context" -> AnyJsonFormat.write(context)))
           val json                      = event.compactPrint
 
+          injector.onFunctionInvocation(project.id)
           function.delivery match {
             case _: ManagedFunction | _: Auth0Function =>
               new FunctionExecutor().syncWithLoggingAndErrorHandling_!(function, json, project, requestId)

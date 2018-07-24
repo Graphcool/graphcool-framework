@@ -52,7 +52,6 @@ class FunctionExecutor(implicit val injector: ClientInjector) {
   val httpClient                               = SimpleHttpClient()
 
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
-    injector.onFunctionInvocation(project.id)
     function.delivery match {
       // Lambda and Dev function environment
       case _: models.ManagedFunction | _: models.Auth0Function =>
