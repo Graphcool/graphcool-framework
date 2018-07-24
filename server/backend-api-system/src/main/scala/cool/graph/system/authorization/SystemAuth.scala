@@ -174,11 +174,8 @@ class SystemAuth()(implicit inj: Injector) extends Injectable {
   }
 
   def parseAuth0IdToken(idToken: String): Option[Auth0IdTokenData] = {
-    implicit val a = Auth0IdTokenDataJsonProtocol.formatAuth0IdTokenData
-
-    val decodedSecret = new String(
-      new sun.misc.BASE64Decoder()
-        .decodeBuffer(config.getString("auth0jwtSecret")))
+    implicit val a    = Auth0IdTokenDataJsonProtocol.formatAuth0IdTokenData
+    val decodedSecret = new String(new sun.misc.BASE64Decoder().decodeBuffer(config.getString("auth0jwtSecret")))
 
     Jwt
       .decodeRaw(idToken, decodedSecret, Seq(JwtAlgorithm.HS256))

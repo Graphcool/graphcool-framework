@@ -43,6 +43,7 @@ trait ClientInjector {
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
   val projectSchemaFetcher: RefreshableProjectFetcher
   val projectRouteHook: (String) => Directive0
+  val onFunctionInvocation: (String) => Unit
   val functionEnvironment: FunctionEnvironment
   val endpointResolver: EndpointResolver
   val logsPublisher: QueuePublisher[String]
@@ -96,6 +97,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val maxImportExportSize: Int                     = 1000000
   lazy val projectRouteHook: String => Directive0       = (_: String) => pass
+  lazy val onFunctionInvocation: String => Unit         = (_: String) => ()
 
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString

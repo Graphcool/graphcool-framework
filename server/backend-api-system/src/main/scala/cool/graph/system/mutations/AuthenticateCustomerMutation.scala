@@ -40,13 +40,9 @@ case class AuthenticateCustomerMutation(
   override val databases: InternalAndProjectDbs = projectDbsFn(projectDatabase)
 
   override def prepareActions(): List[Mutaction] = {
-
-    val auth = new SystemAuth()
-
+    val auth        = new SystemAuth()
     val idTokenData = auth.parseAuth0IdToken(args.auth0IdToken).get
-
-    val name =
-      idTokenData.user_metadata.map(_.name).getOrElse(idTokenData.name)
+    val name        = idTokenData.user_metadata.map(_.name).getOrElse(idTokenData.name)
 
     val (actions, client, project) = AuthenticateCustomerMutation.generateActions(
       name = name,
@@ -201,7 +197,8 @@ object AuthenticateCustomerMutation {
     List(CreateClientDatabaseForProject(projectId = project.id)) ++
       project.models.map(model => CreateModelTable(projectId = project.id, model = model)) ++
       project.models.flatMap(model => {
-        model.scalarFields.filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
+        model.scalarFields
+          .filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
           .map(field => CreateColumn(projectId = project.id, model = model, field = field))
       }) ++
       project.relations.map(relation => CreateRelationTable(project = project, relation = relation))
@@ -238,14 +235,11 @@ object AuthenticateCustomerMutation {
       projectDatabase: ProjectDatabase
   )(implicit inj: Injector, dispatcher: ExecutionContextExecutor, config: Config): (List[Mutaction], Client, Project) = {
 
-    var actions: List[Mutaction] = List()
-
-    val userFields = AuthenticateCustomerMutation.generateUserFields
-    val userModel  = AuthenticateCustomerMutation.generateUserModel.copy(fields = userFields)
-
-    val fileFields = AuthenticateCustomerMutation.generateFileFields
-    val fileModel  = AuthenticateCustomerMutation.generateFileModel.copy(fields = fileFields)
-
+    var actions        = List.empty[Mutaction]
+    val userFields     = AuthenticateCustomerMutation.generateUserFields
+    val userModel      = AuthenticateCustomerMutation.generateUserModel.copy(fields = userFields)
+    val fileFields     = AuthenticateCustomerMutation.generateFileFields
+    val fileModel      = AuthenticateCustomerMutation.generateFileModel.copy(fields = fileFields)
     val exampleProject = generateExampleProject(projectDatabase).copy(models = List(userModel, fileModel))
 
     val client = models.Client(
