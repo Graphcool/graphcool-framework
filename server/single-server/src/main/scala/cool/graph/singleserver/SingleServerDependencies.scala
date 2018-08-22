@@ -74,6 +74,7 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
       binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
       binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver
+      binding identifiedBy "plan-notification-publisher" toNonLazy planNotificationPublisher
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
       bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
       bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
@@ -118,6 +119,7 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   override lazy val environment: String                                           = sys.env.getOrElse("ENVIRONMENT", "local")
   override lazy val serviceName: String                                           = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val pubSub: InMemoryAkkaPubSub[String]                                     = InMemoryAkkaPubSub[String]()
+  lazy val planNotificationPublisher: InMemoryAkkaPubSub[String]                  = InMemoryAkkaPubSub[String]()
   override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = pubSub
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]     = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
   lazy val invalidationPublisher: PubSubPublisher[String]                         = pubSub
