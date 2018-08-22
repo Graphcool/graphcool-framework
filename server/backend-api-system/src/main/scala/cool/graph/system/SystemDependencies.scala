@@ -38,6 +38,7 @@ trait SystemInjector {
   val uncachedProjectResolver: UncachedProjectResolver
   val cachedProjectResolver: CachedProjectResolver
   val invalidationPublisher: PubSubPublisher[String]
+  val planNotificationPublisher: PubSubPublisher[String]
   val globalDatabaseManager: GlobalDatabaseManager
   val snsPublisher: SnsPublisher
   val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
@@ -95,6 +96,8 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
 
   lazy val invalidationPublisher: RabbitAkkaPubSubPublisher[String] =
     RabbitAkkaPubSub.publisher[String](globalRabbitUri, "project-schema-invalidation", durable = true)
+  lazy val planNotificationPublisher: RabbitAkkaPubSubPublisher[String] =
+    RabbitAkkaPubSub.publisher[String](globalRabbitUri, "project-plan-notification", durable = true)
   lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
     parseLambdaAccounts(sys.env.getOrElse("LAMBDA_ACCOUNTS", sys.error("Env var LAMBDA_ACCOUNTS required but not found")))
   )
