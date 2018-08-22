@@ -32,7 +32,10 @@ object ModelToDbMapper {
       isEjected = project.isEjected,
       hasGlobalStarPermission = project.hasGlobalStarPermission,
       activeFunctionDeploymentAccount = project.activeFunctionDeploymentAccount,
-      nextFunctionDeploymentAccount = project.nextFunctionDeploymentAccount
+      nextFunctionDeploymentAccount = project.nextFunctionDeploymentAccount,
+      requestLimitExceeded = project.requestLimitExceeded,
+      invocationLimitExceeded = project.invocationLimitExceeded,
+      databaseLimitExceeded = project.databaseLimitExceeded
     )
   }
 

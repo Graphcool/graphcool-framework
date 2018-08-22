@@ -128,7 +128,10 @@ case class Project(
     isEjected: Boolean = false,
     hasGlobalStarPermission: Boolean = false,
     activeFunctionDeploymentAccount: Option[String] = None,
-    nextFunctionDeploymentAccount: Option[String] = None
+    nextFunctionDeploymentAccount: Option[String] = None,
+    requestLimitExceeded: Boolean = false,
+    invocationLimitExceeded: Boolean = false,
+    databaseLimitExceeded: Boolean = false
 ) extends Node {
 
   val requestPipelineFunctions: List[RequestPipelineFunction]               = functions.collect { case x: RequestPipelineFunction => x }

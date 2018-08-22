@@ -18,7 +18,10 @@ case class Project(
     isEjected: Boolean,
     hasGlobalStarPermission: Boolean,
     activeFunctionDeploymentAccount: Option[String],
-    nextFunctionDeploymentAccount: Option[String]
+    nextFunctionDeploymentAccount: Option[String],
+    requestLimitExceeded: Boolean = false,
+    invocationLimitExceeded: Boolean = false,
+    databaseLimitExceeded: Boolean = false
 )
 
 class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
@@ -37,6 +40,9 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
   def hasGlobalStarPermission         = column[Boolean]("hasGlobalStarPermission")
   def activeFunctionDeploymentAccount = column[Option[String]]("activeFunctionDeploymentAccount")
   def nextFunctionDeploymentAccount   = column[Option[String]]("nextFunctionDeploymentAccount")
+  def requestLimitExceeded            = column[Boolean]("requestLimitExceeded")
+  def invocationLimitExceeded         = column[Boolean]("invocationLimitExceeded")
+  def databaseLimitExceeded           = column[Boolean]("databaseLimitExceeded")
   def clientId                        = column[String]("clientId")
   def client                          = foreignKey("project_clientid_foreign", clientId, Tables.Clients)(_.id)
   def projectDatabaseId               = column[String]("projectDatabaseId")
@@ -56,7 +62,10 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
      isEjected,
      hasGlobalStarPermission,
      activeFunctionDeploymentAccount,
-     nextFunctionDeploymentAccount) <>
+     nextFunctionDeploymentAccount,
+     requestLimitExceeded,
+     invocationLimitExceeded,
+     databaseLimitExceeded) <>
       ((Project.apply _).tupled, Project.unapply)
 }
 

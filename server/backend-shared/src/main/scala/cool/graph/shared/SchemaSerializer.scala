@@ -502,7 +502,10 @@ object SchemaSerializer {
           "isEjected"                       -> JsBoolean(obj.isEjected),
           "hasGlobalStarPermission"         -> JsBoolean(obj.hasGlobalStarPermission),
           "activeFunctionDeploymentAccount" -> obj.activeFunctionDeploymentAccount.toJson,
-          "nextFunctionDeploymentAccount"   -> obj.nextFunctionDeploymentAccount.toJson
+          "nextFunctionDeploymentAccount"   -> obj.nextFunctionDeploymentAccount.toJson,
+          "requestLimitExceeded"            -> JsBoolean(obj.requestLimitExceeded),
+          "invocationLimitExceeded"         -> JsBoolean(obj.invocationLimitExceeded),
+          "databaseLimitExceeded"           -> JsBoolean(obj.databaseLimitExceeded)
         )
       }
 
@@ -534,7 +537,10 @@ object SchemaSerializer {
             isEjected = f("isEjected").convertTo[Boolean],
             hasGlobalStarPermission = f("hasGlobalStarPermission").convertTo[Boolean],
             activeFunctionDeploymentAccount = f("activeFunctionDeploymentAccount").convertTo[Option[String]],
-            nextFunctionDeploymentAccount = f("nextFunctionDeploymentAccount").convertTo[Option[String]]
+            nextFunctionDeploymentAccount = f("nextFunctionDeploymentAccount").convertTo[Option[String]],
+            requestLimitExceeded = f("requestLimitExceeded").convertTo[Boolean],
+            invocationLimitExceeded = f("invocationLimitExceeded").convertTo[Boolean],
+            databaseLimitExceeded = f("databaseLimitExceeded").convertTo[Boolean]
           )
         } catch {
           case e: Throwable => sys.error("Couldn't parse Project: " + e.getMessage)
