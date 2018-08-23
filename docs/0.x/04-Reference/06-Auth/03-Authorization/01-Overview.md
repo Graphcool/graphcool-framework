@@ -34,7 +34,7 @@ type User @model {
 
 type Message @model {
   id: ID! @isUnique
-  sentBy: User! @relation(name: "UserMessages")
+  sender: User! @relation(name: "UserMessages")
   text: String!
   attachments: [String!]!
   location: String!
