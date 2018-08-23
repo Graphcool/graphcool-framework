@@ -25,7 +25,6 @@ import play.api.libs.json.Json
 import scaldi.Module
 import slick.jdbc
 import slick.jdbc.MySQLProfile
-
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 trait SystemInjector {
@@ -63,6 +62,7 @@ trait SystemInjector {
 class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemInjector {
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
+
   implicit val systemInjectorImpl: SystemInjectorImpl = this
   implicit val marshaller: ByteMarshaller[String]     = Conversions.Marshallers.FromString
   implicit val bugsnagger: BugSnaggerImpl             = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
