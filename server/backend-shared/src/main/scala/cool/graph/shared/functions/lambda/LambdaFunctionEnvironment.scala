@@ -52,11 +52,11 @@ object LambdaFunctionEnvironment {
 }
 
 case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) extends FunctionEnvironment {
-  private val idsToAccounts = accounts.map(a => a.id -> a).toMap
+  private val idsToAccounts        = accounts.map(a => a.id -> a).toMap
+  private val maxRequestsSemaphore = new Semaphore(10)
+
   private def accountForId(accountId: Option[String]): LambdaDeploymentAccount =
     idsToAccounts.getOrElse(accountId.getOrElse("default"), sys.error(s"Account $accountId not configured."))
-
-  val maxRequestsSemaphore = new Semaphore(10)
 
   // Picks a random account for new function deployments, ignoring disabled accounts
   override def pickDeploymentAccount(): Option[String] = {

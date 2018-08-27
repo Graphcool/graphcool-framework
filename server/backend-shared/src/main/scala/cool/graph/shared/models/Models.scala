@@ -388,7 +388,6 @@ case class Project(
       case Some(relatedField) => Some(relatedField)
       case None               => relatedModel.fields.find(relatedField => relatedField.relation.contains(relation))
     }
-
   }
 
   def seatByEmail(email: String): Option[Seat] = seats.find(_.email == email)
@@ -421,6 +420,14 @@ case class Project(
     val conflictingType           = this.models.exists(model => List(s"create${model.name}", s"update${model.name}", s"delete${model.name}").contains(name))
 
     conflictingCustomMutation || conflictingCustomQuery || conflictingType
+  }
+
+  def verbalizeLimits: String = {
+    Seq(
+      (requestLimitExceeded, "number of requests (disables all requests)"),
+      (databaseLimitExceeded, "database space usage (disables mutations)"),
+      (invocationLimitExceeded, "number of function invocations (disables function invocations)")
+    ).filter(_._1).map(_._2).mkString(", ")
   }
 }
 
