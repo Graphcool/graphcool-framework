@@ -59,9 +59,7 @@ class CheckScalarFieldPermissionsDeferredResolver(skipPermissionCheck: Boolean, 
     def checkIndividualFieldPermissions(remainingFields: List[Field], remainingPermissions: List[ModelPermission]): Future[List[Field]] = {
       if (remainingPermissions.isEmpty || remainingFields.isEmpty) {
         Future.successful(remainingFields)
-
       } else {
-
         val (current, rest) = getMostLikelyPermission(remainingFields, remainingPermissions)
         checkQueryPermissions(authenticatedRequest, List(current), headDeferred.nodeId, model, headDeferred.node, headDeferred.alwaysQueryMasterDatabase)
           .flatMap(wasSuccess => {

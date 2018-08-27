@@ -46,7 +46,9 @@ class QueryPermissionValidator(project: Project)(implicit injector: ClientInject
       authenticatedRequest: Option[AuthenticatedRequest],
       alwaysQueryMasterDatabase: Boolean
   ): Future[Boolean] = {
+    injector.onPermissionQuery(project.id)
     ClientSharedMetrics.queryPermissionCounter.inc(project.id)
+
     val context = new UserContext(
       project = project,
       authenticatedRequest = authenticatedRequest,
