@@ -169,7 +169,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val maxImportExportSize: Int                     = 10000000
-  lazy val projectRouteHook: String => Directive0       = (_: String) => pass
   lazy val onFunctionInvocation: String => Unit         = (String) => ()
 
   def parseLambdaAccounts(raw: String): Vector[LambdaDeploymentAccount] = {
