@@ -39,7 +39,6 @@ case class ActionWebhookForCreateDataItemAsync(model: Model, project: Project, n
 
     payload.onSuccess {
       case event: Event =>
-        injector.onFunctionInvocation(project.id)
         val whPayload = event.payload.map(p => p.compactPrint).getOrElse("")
         webhookPublisher.publish(Webhook(project.id, "", requestId, event.url, whPayload, event.id, Map.empty))
     }
