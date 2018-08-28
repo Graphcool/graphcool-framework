@@ -425,7 +425,7 @@ case class Project(
   def verbalizeLimits: String = {
     Seq(
       (requestLimitExceeded, "number of requests (disables all requests)"),
-      (databaseLimitExceeded, "database space usage (disables mutations)"),
+      (databaseLimitExceeded, "database space usage (disables mutations except deletes)"),
       (invocationLimitExceeded, "number of function invocations (disables function invocations)")
     ).filter(_._1).map(_._2).mkString(", ")
   }
