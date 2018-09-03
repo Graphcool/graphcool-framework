@@ -359,7 +359,7 @@ type Story @model @rename(oldName: "Post") {
 
 #### Migrating the Value of a Scalar Field
 
-The *temporary directive `@migrationValue(value: String!)`* is used to migrate the value of a scalar field. When changing an optional field to a requried field, it's necessary to also use this directive.
+The *temporary directive `@migrationValue(value: String!)`* is used to migrate the value of a scalar field. When changing an optional field to a required field, it's necessary to also use this directive.
 
 
 ## Naming Conventions
