@@ -16,12 +16,9 @@ import cool.graph.client.finder.RefreshableProjectFetcher
 import cool.graph.private_api.PrivateClientApi
 import cool.graph.shared.errors.CommonErrors.TimeoutExceeded
 import cool.graph.shared.errors.UserAPIErrors.ProjectNotFound
-import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.util.ErrorHandlerFactory
 import spray.json.JsValue
-
-import scala.concurrent.Future
 
 case class ClientServer(prefix: String)(
     implicit system: ActorSystem,

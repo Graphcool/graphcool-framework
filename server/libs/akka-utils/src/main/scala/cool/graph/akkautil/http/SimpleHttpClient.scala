@@ -101,7 +101,8 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
           }
         }
         .recoverWith {
-          case e: RequestFailedError => Future.failed(e)
+          case e: RequestFailedError =>
+            Future.failed(e)
 
           case _: RejectionError =>
             val resp = SimpleHttpResponse(response.status.intValue(), None, Seq.empty, response)
