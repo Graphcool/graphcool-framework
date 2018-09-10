@@ -28,6 +28,8 @@ object Everything extends Topic {
   */
 case class Only(topic: String) extends Topic
 
+object Broadcast extends Only("broadcast")
+
 /**
   * Subscription describes a specific subscription of one actor or callback to one topic.
   *
