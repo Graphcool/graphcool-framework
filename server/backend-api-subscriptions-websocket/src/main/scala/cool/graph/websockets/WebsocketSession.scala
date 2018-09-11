@@ -6,10 +6,7 @@ import akka.actor.{Actor, ActorRef, PoisonPill, Props, ReceiveTimeout, Stash, Te
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
-import cool.graph.messagebus.queue.MappingQueuePublisher
-import cool.graph.messagebus.testkits.InMemoryQueueTestKit
 import cool.graph.websockets.protocol.Request
-
 import scala.collection.mutable
 import scala.concurrent.duration._ // if you don't supply your own Protocol (see below)
 
@@ -49,13 +46,14 @@ case class WebsocketSessionManager(
     case req: IncomingWebsocketMessage =>
       websocketSessions.get(req.sessionId) match {
         case Some(session) => session ! req
-        case None          => println(s"No session actor found for ${req.sessionId} when processing websocket message. This should only happen very rarely.")
+        case None =>
+          println(s"No session actor found for ${req.sessionId} | ${req.projectId} when processing websocket message. This should only happen very rarely.")
       }
 
     case req: IncomingQueueMessage =>
       websocketSessions.get(req.sessionId) match {
         case Some(session) => session ! req
-        case None          => println(s"No session actor found for ${req.sessionId} when processing queue message. This should only happen very rarely.")
+        case None          => // Session already closed
       }
 
     case Terminated(terminatedActor) =>
