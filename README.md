@@ -49,7 +49,7 @@ The framework provides powerful abstractions and building blocks to develop flex
   The following command creates all files you need for a new [service](https://graph.cool/docs/reference/service-definition/overview-opheidaix3).
 
   ```sh
-  graphcool init
+  graphcool-framework init
   ```
 
 3. **Define your data model:**
@@ -108,7 +108,7 @@ The framework provides powerful abstractions and building blocks to develop flex
   To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://graph.cool/docs/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or setup a local Docker-based development environment:
 
   ```sh
-  graphcool deploy
+  graphcool-framework deploy
   ```
 
 6. **Connect to your GraphQL endpoint:**
