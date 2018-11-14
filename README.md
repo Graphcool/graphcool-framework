@@ -6,7 +6,7 @@
 
 **Graphcool is an open-source backend development framework** to develop and deploy GraphQL APIs.
 
-> To learn more about building scalable and production-ready GraphQL servers, be sure to check out [Prisma](https://www.prisma.io).
+> To learn more about building scalable and production-ready GraphQL servers, be sure to check out [Prisma](https://www.prisma.io/with-graphql).
 
 ## Architecture
 
