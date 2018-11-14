@@ -4,116 +4,20 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool-framework.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool-framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
 
-**Graphcool is an open-source backend development framework** to develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
+**Graphcool is an open-source backend development framework** to develop and deploy GraphQL APIs.
 
-The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
-
-<!--
-Add note that Graphcool can still be used with other langs via webhooks??
--->
-
-The framework provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
-
-1. **GraphQL database** to easily evolve your data schema & migrate your database
-2. **Flexible auth** using the JWT-based authentication & permission system
-3. **Realtime API** using GraphQL Subscriptions
-4. **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless functions
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://graph.cool/docs/quickstart/))
+> To learn more about building scalable and production-ready GraphQL servers, be sure to check out [Prisma](https://www.prisma.io).
 
 ## Contents
 
 <img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
 
-* [Quickstart](#quickstart)
 * [Features](#features)
-* [Examples](#examples)
 * [Architecture](#architecture)
 * [Deployment](#deployment)
 * [FAQ](#faq)
-* [Roadmap](#roadmap)
 * [Community](#community)
 * [Contributing](#contributing)
-
-## Quickstart
-
-[Watch this 5 min tutorial](https://www.youtube.com/watch?v=xmri5pNR9-Y) or follow the steps below to get started with the Graphcool framework:
-
-1. **Install the CLI via NPM:**
-
-  ```sh
-  npm install -g graphcool-framework
-  ```
-
-2. **Create a new service:**
-
-  The following command creates all files you need for a new [service](https://graph.cool/docs/reference/service-definition/overview-opheidaix3).
-
-  ```sh
-  graphcool init
-  ```
-
-3. **Define your data model:**
-
-  Edit `types.graphql` to define your data model using the [GraphQL SDL notation](https://graph.cool/docs/reference/database/data-modelling-eiroozae8u). `@model` types map to the database.
-
-  ```graphql
-  type User @model {
-    id: ID! @isUnique
-    name: String!
-    dateOfBirth: DateTime
-
-    # You can declare relations between models like this
-    posts: [Post!]! @relation(name: "UserPosts")
-  }
-
-  type Post @model {
-    id: ID! @isUnique
-    title: String!
-
-    # Relations always have two fields
-    author: User! @relation(name: "UserPosts")
-  }
-  ```
-
-4. **Define permissions and functions:**
-
-  [`graphcool.yml`](https://graph.cool/docs/reference/service-definition/graphcool.yml-foatho8aip) is the root definition of a service where `types`, `permissions` and `functions` are referenced.
-
-  ```yml
-  # Define your data model here
-  types: types.graphql
-
-  # Configure the permissions for your data model
-  permissions:
-  - operation: "*"
-
-  # tokens granting root level access to your API
-  rootTokens: []
-
-  # You can implement your business logic using functions
-  functions:
-    hello:
-      handler:
-        code: src/hello.js
-      type: resolver
-      schema: src/hello.graphql
-  ```
-
-<!--
-5. **Implement API Gateway layer (optional):**
--->
-
-5. **Deploy your service:**
-
-  To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://graph.cool/docs/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or setup a local Docker-based development environment:
-
-  ```sh
-  graphcool deploy
-  ```
-
-6. **Connect to your GraphQL endpoint:**
-
-  Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
 ## Features
 
@@ -143,29 +47,6 @@ The framework provides powerful abstractions and building blocks to develop flex
 * Supports multiple languages including Node.js and Typescript
 * [GraphQL Playground](https://github.com/graphcool/graphql-playground): Interactive GraphQL IDE
 * Supports complex continuous integration/deployment workflows
-
-## Examples
-
-### Service examples
-
-* [auth](examples/auth): Email/password-based authentication
-* [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
-* [env-variables-in-functions](examples/env-variables-in-functions): Function accessing environment variables
-* [full-example](examples/full-example): Full example (webshop) demoing most available features
-* [typescript-gateway-custom-schema](examples/typescript-gateway-custom-schema): Define a custom schema using an API gateway
-* [graphcool-lib](examples/graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
-* [permissions](examples/permissions): Configure permission rules
-* [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
-* [subscriptions](examples/subscriptions): Use subscription functions to react to asynchronous events
-* [yaml-variables](examples/yaml-variables): Use variables in your `graphcool.yml`
-
-### Frontend examples
-
-* [react-graphql](https://github.com/graphcool-examples/react-graphql): React code examples with GraphQL, Apollo, Relay, Auth0 & more
-* [react-native-graphql](https://github.com/graphcool-examples/react-native-graphql): React Native code examples with GraphQL, Apollo, Relay, Auth0 & more
-* [vue-graphql](https://github.com/graphcool-examples/vue-graphql): Vue.js code examples with GraphQL, Apollo & more
-* [angular-graphql](https://github.com/graphcool-examples/angular-graphql): Angular code examples with GraphQL, Apollo & more
-* [ios-graphql](https://github.com/graphcool-examples/ios-graphql): React code examples with GraphQL, Apollo, Relay, Auth0 & more
 
 ## Architecture
 
@@ -210,35 +91,11 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 * `ap-northeast-1` (Asia Pacific, Tokyo)
 * `us-west-1` (US, Oregon)
 
-<!--
-
-#### Consumer-driven API contracts
-
-- https://martinfowler.com/articles/consumerDrivenContracts.html
-
-### Open source & Community
-
-The Graphcool Framework is completely open-source and based on open standards. We highly value
-
-- Open Source & Based on open standards
-
--->
-
-<!--
-
-#### Powerful core
-
-At the core of every Graphcool service is the auto-generated CRUD API that offers a convenient GraphQL-based abstraction over your database.
-
-#### Flexible shell
-
-Business logic, authentication and permissions are implemented with serverless functions that seamlessly integrate with the CRUD API. All communication between different parts of the framework is type-safe thanks to the GraphQL schema.
-
-The API gateway is another tool that provides the power and flexibility needed to build modern applications.
-
--->
-
 ## FAQ
+
+### What's the relation between Graphcool and Prisma?
+
+[Prisma](https://www.prisma.io) 
 
 ### Wait a minute – isn't Graphcool a Backend-as-a-Service?
 
@@ -263,13 +120,6 @@ The API gateway is an _optional_ layer for your API, adding it to your service i
 * File management
 
 Also realize that when you're not using an API gateway, _your service endpoint allows everyone to view all the operations of your CRUD API_. The entire data model can be deduced from the exposed CRUD operations.
-
-## Roadmap
-
-Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/framework/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/framework/issues/new)
-
-We are in the process of setting up a formal roadmap. Check back here in the coming weeks
-to see the new features we are planning!
 
 ## Community
 
