@@ -8,44 +8,6 @@
 
 > To learn more about building scalable and production-ready GraphQL servers, be sure to check out [Prisma](https://www.prisma.io).
 
-## Contents
-
-* [Features](#features)
-* [Architecture](#architecture)
-* [Deployment](#deployment)
-* [FAQ](#faq)
-* [Community](#community)
-* [Contributing](#contributing)
-
-## Features
-
-#### Graphcool enables rapid development
-
-* Extensible & incrementally adoptable
-* No vendor lock-in through open standards
-* Rapid development using powerful abstractions and building blocks
-
-#### Includes everything needed for a GraphQL backend
-
-* GraphQL Database with automatic migrations
-* JWT-based authentication & flexible permission system
-* Realtime GraphQL Subscription API
-* GraphQL specification compliant
-* Compatible with existing libraries and tools (such as GraphQL.js & Apollo)
-
-#### Scalable serverless architecture designed for the cloud
-
-* Docker-based cluster runtime deployable to AWS, Google Cloud, Azure or any other cloud
-* Enables asynchronous, event-driven workflows using serverless functions
-* Http based database connections optimised for serverless functions
-
-#### Integrated developer experience from zero to production
-
-* Rapid local development workflow – also works offline
-* Supports multiple languages including Node.js and Typescript
-* [GraphQL Playground](https://github.com/graphcool/graphql-playground): Interactive GraphQL IDE
-* Supports complex continuous integration/deployment workflows
-
 ## Architecture
 
 Graphcool is a new kind of framework that introduces clear boundaries between your business logic and stateful components. This separation allows the framework to take advantage of modern cloud infrastructure to scale the stateful components without restricting your choice of programming language and development workflow.
@@ -93,11 +55,9 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 
 ### What's the relation between Graphcool and Prisma?
 
-[Prisma](https://www.prisma.io) 
+Think of [Prisma](https://www.prisma.io) as the query engine that used to power the Graphcool Framework. Prisma is available to the developer community as a standalone tool to simplify the implementation of GraphQL servers and other applications.
 
-### Wait a minute – isn't Graphcool a Backend-as-a-Service?
-
-While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), [we're currently in the process](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) of turning Graphcool into a backend development framework. You can still deploy your Graphcool services to the [Graphcool Cloud](https://graph.cool/cloud), and additionally you can run Graphcool locally or deploy to your own infrastructure.
+You can read more about the differences between Prisma and the Graphcool Framework [here](https://www.prisma.io/forum/t/graphcool-framework-and-prisma/2237) and [here](https://www.prisma.io/forum/t/what-are-the-edge-cases-that-make-prisma-necessary/2857/8).
 
 ### Why is Graphcool Core written in Scala?
 
