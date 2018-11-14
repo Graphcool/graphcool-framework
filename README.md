@@ -2,7 +2,7 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![CircleCI](https://circleci.com/gh/graphcool/graphcool-framework.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool-framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/prisma/graphcool-framework.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool-framework) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
 
 **Graphcool is an open-source backend development framework** to develop and deploy GraphQL APIs.
 
