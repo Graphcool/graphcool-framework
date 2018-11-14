@@ -1,5 +1,5 @@
 ---
-alias: ol2eoh8xie
+alias: fu3eangohp
 description: Migrating from Graphcool to Prisma - Server Hosting
 ---
 

@@ -1,5 +1,5 @@
 ---
-alias: ol2eoh8xie
+alias: yae3iegeex
 description: Migrating from Graphcool to Prisma - Data Modeling & GraphQL API
 ---
 

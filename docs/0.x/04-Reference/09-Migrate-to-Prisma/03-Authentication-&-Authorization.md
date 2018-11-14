@@ -1,5 +1,5 @@
 ---
-alias: ol2eoh8xie
+alias: einguwiya9
 description: Migrating from Graphcool to Prisma - Authentication & Authorization
 ---
 

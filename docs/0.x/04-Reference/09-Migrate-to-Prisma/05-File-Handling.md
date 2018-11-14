@@ -1,5 +1,5 @@
 ---
-alias: ol2eoh8xie
+alias: ahmoo9biwa
 description: Migrating from Graphcool to Prisma - File Handling
 ---
 

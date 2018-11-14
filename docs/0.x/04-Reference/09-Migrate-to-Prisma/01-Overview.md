@@ -1,5 +1,5 @@
 ---
-alias: ol2eoh8xie
+alias: xohyai1eer
 description: Migrating from Graphcool to Prisma
 ---
 
