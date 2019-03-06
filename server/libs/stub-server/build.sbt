@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "org.specs2"             %% "specs2-core"              % "3.6.1" % "test"
 )
 
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 parallelExecution in Test := false
 
