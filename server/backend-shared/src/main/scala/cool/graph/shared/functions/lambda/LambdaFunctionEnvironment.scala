@@ -92,7 +92,7 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
   def deployInternal(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
     val key     = externalFile.url.split("\\?").head.split("/").last
     val account = accountForId(project.nextFunctionDeploymentAccount)
-    val runtime = if (!project.isEjected) "nodejs8.10" else Runtime.Nodejs610.toString
+    val runtime = "nodejs8.10"
 
     def create =
       account
