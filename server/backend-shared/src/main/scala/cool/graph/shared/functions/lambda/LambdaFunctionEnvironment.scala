@@ -32,7 +32,7 @@ import scala.util.Random
 
 object LambdaFunctionEnvironment {
   def parseLambdaLogs(logs: String): Vector[JsObject] = {
-    val lines = logs.split("\\n").filter(line => !line.isEmpty && !line.startsWith("START") && !line.startsWith("END") && !line.startsWith("REPORT"))
+    val lines = logs.split("\\n").filter(line => !line.isEmpty && !line.startsWith("START") && !line.startsWith("END") && !line.startsWith("REPORT") && !line.startsWith("XRAY"))
 
     val groupings = lines.foldLeft(Vector.empty[Vector[String]])((acc: Vector[Vector[String]], next: String) => {
       if (next.matches("\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+.*")) {
