@@ -127,12 +127,13 @@ case class LambdaFunctionEnvironment(accounts: Vector[LambdaDeploymentAccount]) 
           UpdateFunctionConfigurationRequest.builder
             .functionName(lambdaFunctionName(project, name))
             .handler(externalFile.lambdaHandler)
+            .runtime(runtime)
             .build()
         )
 
       for {
-        _ <- updateCode.toScala
         _ <- updateConfiguration.toScala
+        _ <- updateCode.toScala
       } yield DeploySuccess()
     }
 
