@@ -129,6 +129,26 @@ describe('Validator', () => {
         }),
       ).toBe(true)
     })
+    
+    test('Json', () => {
+      const types = `
+      type Post {
+        id: ID!
+        json: Json!
+      }
+    `
+      const validator = new Validator(types)
+      expect(() =>
+        validator.validateNode({ _typeName: 'Post', id: '25', Json: '' }),
+      ).toThrow()
+      expect(
+        validator.validateNode({
+          _typeName: 'Post',
+          id: '25',
+          date: '{"test": "json"}',
+        }),
+      ).toBe(true)
+    })
 
     test('Int', () => {
       const types = `
