@@ -82,7 +82,7 @@ Here is an overview of the generated files and the project structure which the C
 
 When working with Graphcool, you can easily add features to your service by pulling in a [template](!alias-zeiv8phail). 
 
-> A Graphcool template is nothing but the definition of another Graphcool service. When running `graphcool add-template <template>`, the CLI downloads all the code from the corresponding GitHub directory and adds the functionality from the template as _comments_ to your `graphcool.ym` and `types.graphql` files.
+> A Graphcool template is nothing but the definition of another Graphcool service. When running `graphcool add-template <template>`, the CLI downloads all the code from the corresponding GitHub directory and adds the functionality from the template as _comments_ to your `graphcool.yml` and `types.graphql` files.
 
 #### Downloading the template code
 
