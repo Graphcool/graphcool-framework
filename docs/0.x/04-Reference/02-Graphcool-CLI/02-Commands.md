@@ -265,7 +265,7 @@ Stop local development cluster.
 #### Usage 
 
 ```sh
-graphcool local pull [flags]
+graphcool local stop [flags]
 ```
 
 #### Flags
