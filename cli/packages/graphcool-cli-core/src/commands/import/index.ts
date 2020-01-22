@@ -22,10 +22,6 @@ export default class Import extends Command {
 
     const { id } = await this.env.getTarget(target)
 
-    if (!source.endsWith('.zip')) {
-      throw new Error(`Source must end with .zip`)
-    }
-
     if (!fs.pathExistsSync(source)) {
       throw new Error(`Path ${source} does not exist`)
     }
