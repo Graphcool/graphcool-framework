@@ -52,7 +52,7 @@ To add a new `Story` type (including a [relation](!alias-eiroozae8u#relations) t
 type User @model {
   id: ID! @isUnique
   name: String!
-  stories: [Story!]! @relation(name: "UserStories")
+  stories: [Story @relation(name: "UserStories")
 }
 
 type Story @model {
@@ -667,7 +667,7 @@ type Story @model {
 }
 ```
 
-To change the cardinality of the `user` field from `to-one` to `to-many`, simply change the type from `User!` to `[User!]!]`.
+To change the cardinality of the `user` field from `to-one` to `to-many`, simply change the type from `User!` to `[User!]!`.
 
 ```graphql
 type User @model {
