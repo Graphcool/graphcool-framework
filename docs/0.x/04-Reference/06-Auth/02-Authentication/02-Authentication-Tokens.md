@@ -130,16 +130,16 @@ If you don't pass the token name to the command, it will simply print the names 
 Root tokens are particularly useful inside [functions](!alias-aiw4aimie9) to authenticate requests against the service's API. The input `event` for functions carries a _temporary_ root token that you can access as follows:
 
 ```js
-module.exports = function(event) {
+export default event => {
 
-  const rootToken = event.context.graphcool.pat
+  const { rootToken } = event.context.graphcool;
 
   // ...
 
 }
 ```
 
-> `pat` stands for _permanent access token_ which is the deprecated term for a root token. 
+> you may see references to `pat` (_permanent access token_), which is depreciated in favor of `rootToken`.
 
 When using the `fromEvent` function from [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) to create a GraphQL client for your service's API, the root token will automatically be set in the `Authorization` header. 
 
