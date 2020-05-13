@@ -55,7 +55,7 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 
 ### What's the relation between Graphcool and Prisma?
 
-Think of [Prisma](https://www.prisma.io) as the query engine that used to power the Graphcool Framework. Prisma is available to the developer community as a standalone tool to simplify the implementation of GraphQL servers and other applications.
+Think of [Prisma](https://www.prisma.io) as the query engine that's used to power the Graphcool Framework. Prisma is available to the developer community as a standalone tool to simplify the implementation of GraphQL servers and other applications.
 
 You can read more about the differences between Prisma and the Graphcool Framework [here](https://www.prisma.io/forum/t/graphcool-framework-and-prisma/2237) and [here](https://www.prisma.io/forum/t/what-are-the-edge-cases-that-make-prisma-necessary/2857/8).
 
