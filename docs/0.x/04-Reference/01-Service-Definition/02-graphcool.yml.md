@@ -99,9 +99,9 @@ permissions:
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields:
-  - firstName
-  - lastName
+  fields:
+    - firstName
+    - lastName
 
 # Only authenticated users can connect a `Message`
 # and `Customer` node via the `CustomerMessages`-relation
@@ -388,9 +388,9 @@ permissions:
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields:
-  - firstName
-  - lastName
+  fields:
+    - firstName
+    - lastName
 
 # Only authenticated users can connect a `Message`
 # and `Customer` node via the `CustomerMessages`-relation
