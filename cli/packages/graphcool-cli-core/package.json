@@ -90,7 +90,7 @@
     "js-yaml": "^3.9.1",
     "jsonstream": "^1.0.3",
     "jwt-decode": "^2.2.0",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.19",
     "lodash.differenceby": "^4.8.0",
     "multimatch": "^2.1.0",
     "opn": "^5.1.0",
